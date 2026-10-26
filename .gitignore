@@ -1,0 +1,23 @@
+## .NET / Visual Studio
+bin/
+obj/
+publish/
+artifacts/
+*.user
+*.suo
+*.userprefs
+*.rsuser
+.vs/
+.vscode/
+.idea/
+*.swp
+TestResults/
+*.log
+
+## Yerel araştırma notları (depoya dahil edilmez)
+replica/
+
+## OS
+Thumbs.db
+Desktop.ini
+.DS_Store

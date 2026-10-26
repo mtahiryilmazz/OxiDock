@@ -1,0 +1,340 @@
+<Window x:Class="OxiDock.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="OxiDock Ayarlar v2.0" Height="520" Width="740"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="NoResize"
+        Background="#141419" Foreground="#FFFFFF"
+        FontFamily="Segoe UI, Inter">
+
+    <Window.Resources>
+        <!-- Sekme Düğmesi Stili -->
+        <Style x:Key="TabNavButtonStyle" TargetType="RadioButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#AAFFFFFF"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1AFFFFFF"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2538BDF8"/>
+                                <Setter Property="Foreground" Value="#38BDF8"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Ayar Satırı Konteyner Stili -->
+        <Style x:Key="SettingCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="#12FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#18FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="210"/> <!-- Sol Gezinme Menüsü -->
+            <ColumnDefinition Width="*"/>   <!-- Sağ İçerik Paneli -->
+        </Grid.ColumnDefinitions>
+
+        <!-- Sol Gezinme Sidebar -->
+        <Border Grid.Column="0" Background="#0F0F14" BorderBrush="#1AFFFFFF" BorderThickness="0,0,1,0" Padding="14">
+            <DockPanel>
+                <!-- Üst Logo & Başlık -->
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,4,4,18">
+                    <TextBlock Text="⚡" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="OxiDock" FontWeight="Bold" FontSize="15" Foreground="#FFFFFF"/>
+                            <Border Background="#2538BDF8" CornerRadius="4" Padding="5,1" Margin="6,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="v2.0.0" FontSize="10" Foreground="#38BDF8" FontWeight="Bold"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="Windows Yapılandırma" FontSize="11" Foreground="#88FFFFFF"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Alt Kaydet Butonu -->
+                <Button DockPanel.Dock="Bottom" Content="Kaydet ve Kapat" Height="36" Background="#38BDF8" 
+                        Foreground="#000000" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnSave_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="8"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+
+                <!-- Menü Seçenekleri -->
+                <StackPanel VerticalAlignment="Top">
+                    <RadioButton x:Name="TabBtnGeneral" Style="{StaticResource TabNavButtonStyle}" Content="⚙️  Genel Tercihler" IsChecked="True" Checked="Tab_Checked"/>
+                    <RadioButton x:Name="TabBtnLayout" Style="{StaticResource TabNavButtonStyle}" Content="📐  Düzen &amp; Senaryolar" Checked="Tab_Checked"/>
+                    <RadioButton x:Name="TabBtnAppearance" Style="{StaticResource TabNavButtonStyle}" Content="🎨  Görünüm &amp; Glass" Checked="Tab_Checked"/>
+                    <RadioButton x:Name="TabBtnProfiles" Style="{StaticResource TabNavButtonStyle}" Content="📁  Profiller (Profiles)" Checked="Tab_Checked"/>
+                    <RadioButton x:Name="TabBtnPomodoro" Style="{StaticResource TabNavButtonStyle}" Content="🍅  Pomodoro &amp; Sağlık" Checked="Tab_Checked"/>
+                    <RadioButton x:Name="TabBtnAi" Style="{StaticResource TabNavButtonStyle}" Content="🤖  AI Asistan (MCP)" Checked="Tab_Checked"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Sağ İçerik Alanı -->
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="20">
+            <Grid>
+                <!-- 1. GENEL AYARLAR -->
+                <StackPanel x:Name="PanelGeneral" Visibility="Visible">
+                    <TextBlock Text="Genel Tercihler" FontSize="18" FontWeight="Bold" Margin="0,0,0,14"/>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Her Zaman Üstte Tut" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Dock'un diğer pencerelerin üzerinde görünmesini sağlar." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkAlwaysOnTop" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Otomatik Gizle (Auto-Hide)" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Fare üzerinden ayrıldığında saydamlaşır veya gizlenir." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkAutoHide" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Tam Ekran Uygulamalarda Gizle" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Video veya oyun tam ekran olduğunda dock'u otomatik gizler." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkFullscreenHide" IsChecked="True" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Hava Durumu Şehri" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Canlı tahmin için konum adı." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <TextBox x:Name="TxtWeatherCity" Text="İstanbul" Width="120" DockPanel.Dock="Right" Background="#20000000" Foreground="#FFFFFF" BorderBrush="#33FFFFFF" Padding="6,4"/>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 2. DÜZEN VE SENARYOLAR -->
+                <StackPanel x:Name="PanelLayout" Visibility="Collapsed">
+                    <TextBlock Text="Düzen ve Senaryolar" FontSize="18" FontWeight="Bold" Margin="0,0,0,14"/>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Yerleşim Senaryosu" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="OxiDock yerleşim davranışı (Floating, Fixed, Swap, Reveal)." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <ComboBox x:Name="CmbScenario" Width="140" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                <ComboBoxItem Content="Yüzen (Floating)" Tag="Floating" IsSelected="True"/>
+                                <ComboBoxItem Content="Sabit (Fixed)" Tag="Fixed"/>
+                                <ComboBoxItem Content="Altta Yer Değiştir (Swap)" Tag="Swap"/>
+                                <ComboBoxItem Content="Kenarda Belir (Reveal)" Tag="Reveal"/>
+                            </ComboBox>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Dock Konumu" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Ekranın üstü veya altı." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <ComboBox x:Name="CmbPosition" Width="140" DockPanel.Dock="Right" VerticalAlignment="Center" SelectionChanged="CmbPosition_SelectionChanged">
+                                <ComboBoxItem Content="Alt (Görev Çubuğu Üstü)" Tag="Bottom" IsSelected="True"/>
+                                <ComboBoxItem Content="Üst (Ekran Üstü)" Tag="Top"/>
+                            </ComboBox>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Yatay Hizalama" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Ortalı, Sola Yaslı veya Sağa Yaslı." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <ComboBox x:Name="CmbAlignment" Width="140" DockPanel.Dock="Right" VerticalAlignment="Center" SelectionChanged="CmbAlignment_SelectionChanged">
+                                <ComboBoxItem Content="Ortalı (Center)" Tag="Center" IsSelected="True"/>
+                                <ComboBoxItem Content="Sola Yaslı (Left)" Tag="Left"/>
+                                <ComboBoxItem Content="Sağa Yaslı (Right)" Tag="Right"/>
+                            </ComboBox>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 3. GÖRÜNÜM VE GLASS AYARLARI -->
+                <StackPanel x:Name="PanelAppearance" Visibility="Collapsed">
+                    <TextBlock Text="Görünüm &amp; Glass Temaları" FontSize="18" FontWeight="Bold" Margin="0,0,0,14"/>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Dock Cam Stili (Anlık Canlı Önizleme)" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Seçtiğiniz tema arkadaki dock'ta ve ekranda anında güncellenir." FontSize="11" Foreground="#38BDF8"/>
+                            </StackPanel>
+                            <ComboBox x:Name="CmbStyle" Width="160" DockPanel.Dock="Right" VerticalAlignment="Center" SelectionChanged="CmbStyle_SelectionChanged">
+                                <ComboBoxItem Content="🌙 Dark Glass (Koyu Cam)" Tag="DarkGlass" IsSelected="True"/>
+                                <ComboBoxItem Content="🌊 Liquid Glass (Akıcı Cam)" Tag="LiquidGlass"/>
+                                <ComboBoxItem Content="❄️ Light Glass (Aydınlık Cam)" Tag="LightGlass"/>
+                                <ComboBoxItem Content="⚡ Cyberpunk Neon (Mor/Neon)" Tag="Cyberpunk"/>
+                                <ComboBoxItem Content="⬛ OLED Deep Black (Saf Siyah)" Tag="OledBlack"/>
+                                <ComboBoxItem Content="🪟 Saydam (Transparent)" Tag="Transparent"/>
+                            </ComboBox>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="Dock Ölçeği (Boyut)" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock x:Name="TxtScaleVal" Text="1.00x" Foreground="#38BDF8" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            </DockPanel>
+                            <Slider x:Name="SldScale" Minimum="0.8" Maximum="1.25" Value="1.0" TickFrequency="0.05" IsSnapToTickEnabled="True" ValueChanged="SldScale_ValueChanged"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Saydamlığı Azalt (Reduce Transparency)" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Tema renklerini koruyarak camı matlaştırır ve opaklaştırır." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkReduceTransparency" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Click="ChkReduceTransparency_Click"/>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 4. PROFİLLER (PROFILES) -->
+                <StackPanel x:Name="PanelProfiles" Visibility="Collapsed">
+                    <TextBlock Text="Profiller (OxiDock Profiles)" FontSize="18" FontWeight="Bold" Margin="0,0,0,14"/>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Aktif Profil" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Çalışma alanınıza uygun widget kombinasyonunu seçin." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <ComboBox x:Name="CmbActiveProfile" Width="160" DockPanel.Dock="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,6">
+                                <TextBlock Text="Kayıtlı Çalışma Alanları (Profiller)" FontWeight="SemiBold" FontSize="13" DockPanel.Dock="Left"/>
+                                <TextBlock Text="Listeden seçip silebilirsiniz" FontSize="11" Foreground="#88FFFFFF" DockPanel.Dock="Right" HorizontalAlignment="Right"/>
+                            </DockPanel>
+                            <ListBox x:Name="LstProfiles" Height="110" Background="#20000000" Foreground="#FFFFFF" BorderBrush="#22FFFFFF" SelectionChanged="LstProfiles_SelectionChanged"/>
+                            <DockPanel Margin="0,8,0,0">
+                                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                    <TextBox x:Name="TxtNewProfileName" Width="130" Background="#20000000" Foreground="#FFFFFF" BorderBrush="#33FFFFFF" Padding="6,4" Margin="0,0,6,0" ToolTip="Yeni Çalışma Alanı Adı"/>
+                                    <Button Content="+ Ekle" Padding="10,4" Background="#38BDF8" Foreground="#000000" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="BtnAddProfile_Click"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                                    <Button x:Name="BtnRenameProfile" Content="✏️ Yeniden Adlandır" Padding="8,4" Background="#22FFFFFF" Foreground="#FFFFFF" BorderThickness="1" BorderBrush="#33FFFFFF" Cursor="Hand" Margin="0,0,6,0" Click="BtnRenameProfile_Click"/>
+                                    <Button x:Name="BtnDeleteProfile" Content="🗑️ Alanı Sil" Padding="8,4" Background="#33EF4444" Foreground="#EF4444" BorderThickness="1" BorderBrush="#55EF4444" Cursor="Hand" Click="BtnDeleteProfile_Click"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 5. POMODORO & SAĞLIK (WELLNESS) -->
+                <StackPanel x:Name="PanelPomodoro" Visibility="Collapsed">
+                    <TextBlock Text="Pomodoro Odaklanma &amp; Sağlık" FontSize="18" FontWeight="Bold" Margin="0,0,0,14"/>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Odaklanma Süresi (Dakika)" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Varsayılan: 25 dakika." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <TextBox x:Name="TxtPomoFocus" Text="25" Width="60" DockPanel.Dock="Right" Background="#20000000" Foreground="#FFFFFF" BorderBrush="#33FFFFFF" Padding="6,4"/>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Mola Süresi (Dakika)" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Varsayılan: 5 dakika." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <TextBox x:Name="TxtPomoBreak" Text="5" Width="60" DockPanel.Dock="Right" Background="#20000000" Foreground="#FFFFFF" BorderBrush="#33FFFFFF" Padding="6,4"/>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Duruş (Posture) &amp; Su Hatırlatıcıları" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Belirli aralıklarla masa başı sağlık uyarıları gösterir." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkReminders" IsChecked="True" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 6. AI ASİSTAN (MCP SERVER) -->
+                <StackPanel x:Name="PanelAi" Visibility="Collapsed">
+                    <TextBlock Text="AI Asistan Entegrasyonu (OxiDock MCP)" FontSize="18" FontWeight="Bold" Margin="0,0,0,14"/>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Yerel AI Bağlantısını Etkinleştir" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Cursor, Claude, Antigravity ve yerel AI istemcilerine izin verir." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkEnableAi" IsChecked="True" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Yerel Uç Nokta (Local MCP Endpoint)" FontWeight="SemiBold" FontSize="13"/>
+                            <TextBlock Text="http://127.0.0.1:48199/status" Foreground="#38BDF8" FontFamily="Consolas" Margin="0,4,0,2"/>
+                            <TextBlock Text="Status: inspect_dock, switch_profile, toggle_widget, control_pomodoro" FontSize="11" Foreground="#88FFFFFF"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCardStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="AI'ın Düzen Değiştirmesine İzin Ver" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="AI asistandan profil veya widget düzenleme komutu alabilir." FontSize="11" Foreground="#88FFFFFF"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkAllowAiChanges" IsChecked="True" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Window>
