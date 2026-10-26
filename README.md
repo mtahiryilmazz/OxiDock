@@ -30,6 +30,7 @@ OxiDock; saat, hava durumu, sistem istatistikleri, müzik kontrolü, Pomodoro ve
 | 📝 **Hızlı Notlar** | Otomatik kaydedilen not alanı |
 | 🚀 **Uygulamalar** | Sık kullanılan Windows uygulamalarını hızlı başlatma |
 | ⚡ **Özel Araç** | Kendi komutunuzu/uygulamanızı (ör. Windows Terminal) tek tıkla çalıştırın |
+| 🧩 **Kendi Uygulama Widget'larınızı Ekleyin** | Word, Excel, VS Code veya dilediğiniz uygulamayı özel başlık, simge stili (Fluent, Siyah-Beyaz, Material, Renkli), vurgu rengi ve Android boyutuyla (1x1, 1x2, 1x3) dock'a ekleyin |
 | 🌐 **Ağ** | Ping ve bağlantı durumu |
 | ₿ **Kripto** | BTC / ETH / SOL anlık fiyatları (Binance) |
 | 📅 **Takvim** | Tarih görünümü ve Google Takvim kısayolu |
@@ -42,13 +43,14 @@ OxiDock; saat, hava durumu, sistem istatistikleri, müzik kontrolü, Pomodoro ve
 - **Konum:** Alt / Üst, Ortalı / Sol / Sağ hizalama
 - **Yerleşim senaryoları:** Floating, Fixed, Swap, Reveal
 - Ölçek (0.8× – 1.25×), widget aralığı, otomatik gizleme, her zaman üstte, tam ekranda gizleme
-- Android tarzı widget boyutları: `1x1`, `1x2`, `1x3`
+- Kare orantılı dengeli butonlar (`MinWidth="64"`, 34x34 uygulama butonları)
+- Android tarzı widget boyutları: `1x1` (Kare), `1x2` (Standart), `1x3` (Genişletilmiş)
 
 ### 🗂️ Profiller (Çalışma Alanları)
-Her profil kendi widget setini ve boyutlarını saklar. Varsayılan profiller: **Standart**, **İş & Geliştirici**, **Odaklanma**. Profil ekleme, yeniden adlandırma ve silme desteklenir.
+Her profil kendi widget setini, özel uygulama widget'larını ve boyutlarını saklar. Varsayılan profiller: **Standart**, **İş & Geliştirici**, **Odaklanma**. Profil ekleme, yeniden adlandırma ve silme desteklenir.
 
-### 📚 Widget Kütüphanesi
-Kategorilere ayrılmış widget tarayıcısı; kartları dock'a **sürükle-bırak** ile ekleyin, boyutlarını tek tıkla değiştirin.
+### 📚 Widget Kütüphanesi (3x Sütun & Zengin Önizlemeler)
+Windows 11 ve CoolDock estetiğinde, dikey kaydırmalı 3 sütunlu (`UniformGrid Columns="3"`) kütüphane paneli. Her widget için gerçek zamanlı kart içi önizleme, anlık boyut değiştirme hapları (`1x1`, `1x2`, `1x3`) ve doğrudan dock'a **sürükle-bırak** desteği. Ayrıca kütüphane üzerinden tek tıkla yeni özel uygulama widget'ı oluşturma desteği.
 
 ### 🤖 Yerel AI Asistan API'si (MCP uyumlu)
 OxiDock, yalnızca `127.0.0.1` üzerinde dinleyen hafif bir HTTP sunucusu barındırır (varsayılan port **48199**). Claude, Cursor, Antigravity gibi yerel AI istemcileri veya kendi betikleriniz dock'u inceleyip kontrol edebilir.

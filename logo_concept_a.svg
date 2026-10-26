@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="oxibg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="dockgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#818CF8"/>
+      <stop offset="100%" stop-color="#C084FC"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#oxibg)"/>
+  <!-- O Dış Halka -->
+  <circle cx="128" cy="120" r="70" fill="none" stroke="url(#dockgrad)" stroke-width="20" stroke-linecap="round"/>
+  <!-- Taban Yüzen Dock Barı -->
+  <rect x="52" y="196" width="152" height="20" rx="10" fill="url(#dockgrad)"/>
+  <!-- İçerideki Modüler Widget Blokları (Kareler) -->
+  <rect x="94" y="86" width="28" height="28" rx="7" fill="#38BDF8"/>
+  <rect x="134" y="86" width="28" height="28" rx="7" fill="#818CF8"/>
+  <rect x="94" y="126" width="28" height="28" rx="7" fill="#C084FC"/>
+  <rect x="134" y="126" width="28" height="28" rx="7" fill="#34D399"/>
+</svg>

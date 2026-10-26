@@ -390,6 +390,14 @@ namespace OxiDock
 
         #endregion
 
+        private void BtnCreateCustomWidget_Click(object sender, RoutedEventArgs e)
+        {
+            if (Owner is MainWindow mw)
+            {
+                mw.ShowCustomWidgetEditorDialog(null);
+            }
+        }
+
         private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             Close();

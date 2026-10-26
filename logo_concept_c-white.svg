@@ -1,0 +1,30 @@
+<svg fill="#ffffff" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><title>OxiDock</title>
+  <defs>
+    <linearGradient id="bgC" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="glassBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#bgC)"/>
+  
+  <!-- Yüzen Dış Cam Konteyner Kapsülü -->
+  <rect x="28" y="76" width="200" height="104" rx="30" fill="#ffffff" fill-opacity="0.6" stroke="#ffffff" stroke-width="2.5"/>
+  
+  <!-- 3x Kare Widget Modülleri (Kare ve Orantılı) -->
+  <rect x="42" y="90" width="46" height="76" rx="14" fill="#ffffff" fill-opacity="0.85"/>
+  <rect x="94" y="90" width="68" height="76" rx="14" fill="#ffffff" fill-opacity="0.85"/>
+  <rect x="168" y="90" width="46" height="76" rx="14" fill="#ffffff" fill-opacity="0.85"/>
+  
+  <!-- İçerideki Widget İkon Detayları -->
+  <circle cx="65" cy="128" r="9" fill="#ffffff"/>
+  <rect x="108" y="122" width="40" height="12" rx="4" fill="#ffffff"/>
+  <polygon points="191,120 191,136 203,128" fill="#ffffff"/>
+
+  <!-- Taban Parlama Vurgusu -->
+  <rect x="78" y="194" width="100" height="6" rx="3" fill="#ffffff" opacity="0.8"/>
+</svg>

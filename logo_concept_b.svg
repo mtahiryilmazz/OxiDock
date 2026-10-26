@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bgB" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0F19"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="gFluent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="gPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C084FC"/>
+      <stop offset="100%" stop-color="#9333EA"/>
+    </linearGradient>
+    <linearGradient id="gGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="gDock" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#bgB)"/>
+  <!-- Windows 4-Panel Widget Matrisi (Perspektif ve Yuvarlak Köşeli) -->
+  <rect x="48" y="48" width="74" height="74" rx="20" fill="url(#gFluent)"/>
+  <rect x="134" y="48" width="74" height="74" rx="20" fill="url(#gPurple)"/>
+  <rect x="48" y="134" width="74" height="74" rx="20" fill="url(#gGreen)"/>
+  <!-- Sağ alt panel dock ve araç başlatıcıyı simgeler -->
+  <rect x="134" y="134" width="74" height="74" rx="20" fill="#1E293B" stroke="#38BDF8" stroke-width="3"/>
+  <rect x="146" y="160" width="50" height="22" rx="7" fill="url(#gFluent)"/>
+</svg>

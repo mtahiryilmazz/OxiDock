@@ -1,7 +1,7 @@
 <Window x:Class="OxiDock.WidgetBrowserWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="OxiDock Widget Kütüphanesi" Height="600" Width="840"
+        Title="OxiDock Widget Kütüphanesi" Height="680" Width="1020"
         WindowStartupLocation="Manual"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -18,8 +18,8 @@
             <Setter Property="Foreground" Value="#CCCCCC"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="#22FFFFFF"/>
-            <Setter Property="Padding" Value="12,5"/>
-            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -33,7 +33,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="#3338BDF8"/>
-                                <Setter TargetName="bd" Property="BorderBrush" Value="#5538BDF8"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#6638BDF8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -47,8 +47,8 @@
             <Setter Property="Foreground" Value="#94A3B8"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="#20FFFFFF"/>
-            <Setter Property="Padding" Value="6,2"/>
-            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="Padding" Value="7,3"/>
+            <Setter Property="Margin" Value="3,0"/>
             <Setter Property="FontSize" Value="9"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -56,7 +56,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="7" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
@@ -64,67 +64,102 @@
             </Setter>
         </Style>
 
-        <!-- Minimal Widget Kartı Stili -->
+        <!-- Windows 11 & CoolDock Tarzı Zengin Widget Kart Stili -->
         <Style x:Key="WidgetCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="#161622"/>
-            <Setter Property="BorderBrush" Value="#25FFFFFF"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#241B1B2A" Offset="0.0"/>
+                        <GradientStop Color="#2013131E" Offset="1.0"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#26FFFFFF"/>
             <Setter Property="BorderThickness" Value="1.2"/>
-            <Setter Property="CornerRadius" Value="14"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="Margin" Value="5"/>
-            <Setter Property="Width" Value="252"/>
-            <Setter Property="Height" Value="122"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Margin" Value="6,6"/>
+            <Setter Property="Height" Value="156"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#1E1E30"/>
-                    <Setter Property="BorderBrush" Value="#7738BDF8"/>
+                    <Setter Property="Background">
+                        <Setter.Value>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#3526263D" Offset="0.0"/>
+                                <GradientStop Color="#2D1B1B2C" Offset="1.0"/>
+                            </LinearGradientBrush>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="BorderBrush" Value="#8838BDF8"/>
                 </Trigger>
             </Style.Triggers>
+        </Style>
+
+        <!-- Kart İçi Önizleme Konteyner Stili -->
+        <Style x:Key="CardPreviewContainerStyle" TargetType="Border">
+            <Setter Property="Background" Value="#D90A0D14"/>
+            <Setter Property="BorderBrush" Value="#1EFFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Margin" Value="0,6,0,6"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
     </Window.Resources>
 
     <!-- Ana Çerçeve (Koyu Glass & Canlı Kenarlık) -->
-    <Border Background="#F70E0E17" CornerRadius="20" BorderBrush="#3338BDF8" BorderThickness="1.2" Margin="8">
+    <Border Background="#F90D0E16" CornerRadius="24" BorderBrush="#3838BDF8" BorderThickness="1.2" Margin="10">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="32" ShadowDepth="8" Direction="270" Color="#000000" Opacity="0.88"/>
+            <DropShadowEffect BlurRadius="36" ShadowDepth="10" Direction="270" Color="#000000" Opacity="0.92"/>
         </Border.Effect>
 
-        <Grid Margin="12,10">
+        <Grid Margin="16,14">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/> <!-- Üst Başlık Barı (Sürüklenebilir) -->
                 <RowDefinition Height="Auto"/> <!-- Kategori Filtre Butonları -->
-                <RowDefinition Height="*"/>    <!-- Kaydırılabilir Kartlar Alanı -->
+                <RowDefinition Height="*"/>    <!-- 3 Sütunlu Kaydırılabilir Kartlar Alanı -->
             </Grid.RowDefinitions>
 
             <!-- 1. Üst Başlık ve Kapatma Butonu (Pencereyi Taşımak İçin Sürüklenebilir) -->
-            <Border Grid.Row="0" Background="Transparent" Cursor="SizeAll" MouseLeftButtonDown="Window_Header_MouseDown" Margin="2,0,2,6">
+            <Border Grid.Row="0" Background="Transparent" Cursor="SizeAll" MouseLeftButtonDown="Window_Header_MouseDown" Margin="2,0,2,10">
                 <DockPanel LastChildFill="True">
-                    <Button DockPanel.Dock="Right" Content="✕" Width="28" Height="28" Background="#1FFFFFFF" 
-                            Foreground="#AAFFFFFF" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click" HorizontalAlignment="Right">
-                        <Button.Resources>
-                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
-                        </Button.Resources>
-                    </Button>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="✨ + Kendi Widget'ını Oluştur" Padding="12,6" Background="#2638BDF8" 
+                                Foreground="#38BDF8" BorderBrush="#5538BDF8" BorderThickness="1.2" FontWeight="Bold" FontSize="11" 
+                                Cursor="Hand" Margin="0,0,10,0" Click="BtnCreateCustomWidget_Click">
+                            <Button.Resources>
+                                <Style TargetType="Border"><Setter Property="CornerRadius" Value="9"/></Style>
+                            </Button.Resources>
+                        </Button>
+                        <Button Content="✕" Width="30" Height="30" Background="#1FFFFFFF" 
+                                Foreground="#AAFFFFFF" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click">
+                            <Button.Resources>
+                                <Style TargetType="Border"><Setter Property="CornerRadius" Value="7"/></Style>
+                            </Button.Resources>
+                        </Button>
+                    </StackPanel>
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="🧩" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <StackPanel>
+                        <Border Width="38" Height="38" CornerRadius="12" Background="#2638BDF8" Margin="0,0,10,0">
+                            <TextBlock Text="🧩" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="OxiDock Widget Kütüphanesi" FontWeight="Bold" FontSize="15" Foreground="#FFFFFF"/>
-                                <Border Background="#2538BDF8" CornerRadius="4" Padding="6,1" Margin="8,0,0,0">
-                                    <TextBlock Text="Android Boyutlandırmalı (1x1, 1x2, 1x3)" FontSize="10" Foreground="#38BDF8" FontWeight="Bold"/>
+                                <TextBlock Text="OxiDock Widget Kütüphanesi" FontWeight="Bold" FontSize="16" Foreground="#FFFFFF"/>
+                                <Border Background="#2538BDF8" CornerRadius="6" Padding="7,2" Margin="10,0,0,0">
+                                    <TextBlock Text="Windows &amp; CoolDock 3x Sütun" FontSize="10" Foreground="#38BDF8" FontWeight="Bold"/>
                                 </Border>
                             </StackPanel>
-                            <TextBlock Text="Widget kartlarını açın, Android boyutlarını seçin veya doğrudan Dock'a sürükleyin" 
-                                       FontSize="11" Foreground="#88FFFFFF" Margin="0,2,0,0"/>
+                            <TextBlock Text="Önizlemeli widget kartlarını keşfedin, Android 1x1, 1x2, 1x3 boyutlarını seçin veya Dock'a sürükleyin" 
+                                       FontSize="11" Foreground="#94A3B8" Margin="0,3,0,0"/>
                         </StackPanel>
                     </StackPanel>
                 </DockPanel>
             </Border>
 
             <!-- 2. Kategori Filtre Sekmeleri -->
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="2,4,2,8">
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="2,0,2,12">
                 <Button x:Name="BtnCatAll" Content="🌟 Tümü (15)" Style="{StaticResource CategoryTabStyle}" Click="BtnCategory_Click" Tag="all"/>
                 <Button x:Name="BtnCatTime" Content="⏰ Zaman &amp; Odak" Style="{StaticResource CategoryTabStyle}" Click="BtnCategory_Click" Tag="time"/>
                 <Button x:Name="BtnCatSystem" Content="📊 Sistem &amp; Ağ" Style="{StaticResource CategoryTabStyle}" Click="BtnCategory_Click" Tag="system"/>
@@ -132,9 +167,9 @@
                 <Button x:Name="BtnCatShortcuts" Content="⚡ Kısayollar &amp; Pano" Style="{StaticResource CategoryTabStyle}" Click="BtnCategory_Click" Tag="shortcuts"/>
             </StackPanel>
 
-            <!-- 3. Kaydırılabilir Widget Kartları Listesi -->
+            <!-- 3. 3 Sütunlu Kaydırılabilir Widget Kartları Listesi -->
             <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,2,0,0">
-                <WrapPanel x:Name="PnlWidgetList" Orientation="Horizontal">
+                <UniformGrid x:Name="PnlWidgetList" Columns="3">
 
                     <!-- 1. Saat & Takvim -->
                     <Border x:Name="CardClock" Style="{StaticResource WidgetCardStyle}" Tag="clock"
@@ -149,20 +184,28 @@
                             </Grid.RowDefinitions>
                             <!-- Üst Başlık -->
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#2238BDF8" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="⏰" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#2638BDF8" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="⏰" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeClock" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusClock" Text="✓ Aktif" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeClock" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusClock" Text="✓ Aktif" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Saat &amp; Zaman" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="Dijital, Retro, Dünya" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Saat &amp; Zaman" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Dijital, Retro, Dünya Saatleri" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <!-- Görsel Dock Önizleme -->
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="⏰ 10:45:20 • 26 Eki Pzt" FontSize="10" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Windows / CoolDock Görsel Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border Background="#1A38BDF8" BorderBrush="#3338BDF8" BorderThickness="1" CornerRadius="6" Padding="6,2" Margin="0,0,4,0">
+                                        <TextBlock Text="10:45" FontSize="14" FontWeight="Bold" Foreground="#38BDF8" FontFamily="Segoe UI, Consolas"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center" Margin="3,0,0,0">
+                                        <TextBlock Text="26 Eki Pazartesi" FontSize="9" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                        <TextBlock Text="IST (UTC+3) • CANLI" FontSize="8" Foreground="#64748B"/>
+                                    </StackPanel>
+                                </StackPanel>
                             </Border>
                             <!-- Android Boyut Hapları -->
                             <DockPanel Grid.Row="2" LastChildFill="False">
@@ -188,19 +231,28 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#26EF4444" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="🍅" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#26EF4444" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="🍅" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgePomodoro" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusPomodoro" Text="✓ Aktif" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgePomodoro" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusPomodoro" Text="✓ Aktif" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Pomodoro &amp; Odak" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="25-5 Döngüsü &amp; İlerleme" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Pomodoro &amp; Odak" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="25-5 Döngüsü &amp; İlerleme" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="🍅 25:00 ODAK [● ○ ○ ○]" FontSize="10" FontWeight="Bold" Foreground="#F87171" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border Background="#26EF4444" CornerRadius="6" Padding="6,2" Margin="0,0,6,0">
+                                        <TextBlock Text="25:00" FontSize="13" FontWeight="Bold" Foreground="#F87171" FontFamily="Segoe UI, Consolas"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="ODAKLANMA DÖNGÜSÜ" FontSize="8" FontWeight="Bold" Foreground="#EF4444"/>
+                                        <TextBlock Text="● ○ ○ ○ (Tur 1/4)" FontSize="9" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </StackPanel>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -225,19 +277,30 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#22F59E0B" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="☀️" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#26F59E0B" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="☀️" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeWeather" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusWeather" Text="✓ Aktif" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeWeather" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusWeather" Text="✓ Aktif" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Hava Durumu" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="Canlı Derece &amp; 5 Günlük" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Hava Durumu" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Canlı Derece &amp; 5 Günlük" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="☀️ 22° Kozan | Yarın 24°" FontSize="10" FontWeight="Bold" Foreground="#F59E0B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <Grid VerticalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="☀️ 22°" FontSize="14" FontWeight="Bold" Foreground="#F59E0B" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Kozan • Parçalı Bulutlu" FontSize="9" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                        <TextBlock Text="Sal 20° • Çar 17° • Per 21°" FontSize="8" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -262,19 +325,33 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#223B82F6" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="⚡" FontSize="12" Foreground="#38BDF8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#263B82F6" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="⚡" FontSize="14" Foreground="#38BDF8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeSystem" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusSystem" Text="✓ Aktif" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeSystem" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusSystem" Text="✓ Aktif" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Donanım Monitörü" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="CPU, RAM, Disk, Ağ" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Donanım Monitörü" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="CPU, RAM, Disk, Pil" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="CPU 14% | RAM 46% | Disk C:" FontSize="10" FontWeight="Bold" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <StackPanel Margin="4,0">
+                                        <TextBlock Text="CPU 14%" FontSize="9" FontWeight="Bold" Foreground="#60A5FA"/>
+                                        <ProgressBar Value="14" Maximum="100" Height="3" Width="36" Foreground="#3B82F6" Background="#22FFFFFF" BorderThickness="0" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4,0">
+                                        <TextBlock Text="RAM 46%" FontSize="9" FontWeight="Bold" Foreground="#C084FC"/>
+                                        <ProgressBar Value="46" Maximum="100" Height="3" Width="36" Foreground="#A855F7" Background="#22FFFFFF" BorderThickness="0" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4,0">
+                                        <TextBlock Text="⚡ 92%" FontSize="9" FontWeight="Bold" Foreground="#34D399"/>
+                                        <TextBlock Text="PİL DOLU" FontSize="7" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -287,7 +364,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- 5. Kripto & Piyasa Kurları (YENİ WEB WIDGET) -->
+                    <!-- 5. Kripto & Piyasa Kurları -->
                     <Border x:Name="CardCrypto" Style="{StaticResource WidgetCardStyle}" Tag="crypto"
                             PreviewMouseLeftButtonDown="WidgetCard_PreviewMouseLeftButtonDown"
                             PreviewMouseMove="WidgetCard_PreviewMouseMove"
@@ -299,19 +376,35 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#26F59E0B" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="₿" FontSize="13" Foreground="#F59E0B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#26F59E0B" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="₿" FontSize="14" Foreground="#F59E0B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeCrypto" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusCrypto" Text="+ Ekle" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeCrypto" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusCrypto" Text="+ Ekle" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Kripto &amp; Piyasa" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="BTC, ETH, SOL, USD/TRY" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Kripto &amp; Piyasa" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="BTC, ETH, SOL, USD/TRY" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="BTC $68,450 | ETH $2,640" FontSize="10" FontWeight="Bold" Foreground="#F59E0B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <StackPanel Margin="4,0">
+                                        <TextBlock Text="BTC" FontSize="8" FontWeight="Bold" Foreground="#F59E0B"/>
+                                        <TextBlock Text="$68,450" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    </StackPanel>
+                                    <Border Width="1" Height="16" Background="#22FFFFFF" Margin="3,0"/>
+                                    <StackPanel Margin="4,0">
+                                        <TextBlock Text="ETH" FontSize="8" FontWeight="Bold" Foreground="#60A5FA"/>
+                                        <TextBlock Text="$2,640" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    </StackPanel>
+                                    <Border Width="1" Height="16" Background="#22FFFFFF" Margin="3,0"/>
+                                    <StackPanel Margin="4,0">
+                                        <TextBlock Text="USD" FontSize="8" FontWeight="Bold" Foreground="#34D399"/>
+                                        <TextBlock Text="34.25 ₺" FontSize="11" FontWeight="Bold" Foreground="#34D399"/>
+                                    </StackPanel>
+                                </StackPanel>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -324,7 +417,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- 6. Takvim & Ajanda (YENİ WIDGET) -->
+                    <!-- 6. Takvim & Ajanda -->
                     <Border x:Name="CardCalendar" Style="{StaticResource WidgetCardStyle}" Tag="calendar"
                             PreviewMouseLeftButtonDown="WidgetCard_PreviewMouseLeftButtonDown"
                             PreviewMouseMove="WidgetCard_PreviewMouseMove"
@@ -336,19 +429,28 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#22EC4899" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="📅" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#26EC4899" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="📅" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeCalendar" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusCalendar" Text="+ Ekle" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeCalendar" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusCalendar" Text="+ Ekle" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Takvim &amp; Ajanda" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="Günlük Plan &amp; Hafta" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Takvim &amp; Ajanda" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Günlük Plan &amp; Hafta" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="📅 26 Ekim Pazartesi" FontSize="10" FontWeight="Bold" Foreground="#EC4899" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border Background="#26EC4899" CornerRadius="6" Padding="6,2" Margin="0,0,6,0">
+                                        <TextBlock Text="26" FontSize="14" FontWeight="Bold" Foreground="#EC4899"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Ekim Pazartesi" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                        <TextBlock Text="Bugün: 2 Planlı Görev" FontSize="8" Foreground="#38BDF8"/>
+                                    </StackPanel>
+                                </StackPanel>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -361,7 +463,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- 7. Spotlight Hızlı Web/AI Arama (YENİ WEB WIDGET) -->
+                    <!-- 7. Spotlight Hızlı Web/AI Arama -->
                     <Border x:Name="CardQuickSearch" Style="{StaticResource WidgetCardStyle}" Tag="quicksearch"
                             PreviewMouseLeftButtonDown="WidgetCard_PreviewMouseLeftButtonDown"
                             PreviewMouseMove="WidgetCard_PreviewMouseMove"
@@ -373,19 +475,25 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#228B5CF6" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="🔍" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#268B5CF6" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="🔍" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeQuickSearch" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusQuickSearch" Text="+ Ekle" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeQuickSearch" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusQuickSearch" Text="+ Ekle" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Spotlight Arama" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="Google, Perplexity, ChatGPT" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Spotlight Arama" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Google, Perplexity, ChatGPT" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="[ 🔍 Web / Yapay Zeka Ara ]" FontSize="10" FontWeight="Bold" Foreground="#A78BFA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <Border Background="#1C1C28" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="8" Padding="6,2">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="🔍" FontSize="10" Foreground="#88FFFFFF" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Web veya AI Ara..." FontSize="9" Foreground="#64748B"/>
+                                    </StackPanel>
+                                </Border>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -410,19 +518,34 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#2222C55E" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="🎵" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#2622C55E" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="🎵" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeMusic" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusMusic" Text="✓ Aktif" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeMusic" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusMusic" Text="✓ Aktif" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Windows Medya Çalar" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="Spotify &amp; Tarayıcı Kontrol" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Windows Medya Çalar" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Spotify &amp; Tarayıcı Kontrol" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="🎵 Çalan Şarkı • ⏸ | ⏭" FontSize="10" FontWeight="Bold" Foreground="#22C55E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <Grid VerticalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="26" Height="26" CornerRadius="6" Background="#2222C55E" Margin="0,0,6,0">
+                                        <TextBlock Text="🎵" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="OxiDock Canlı Medya" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="Spotify • Çalıyor" FontSize="8" Foreground="#22C55E"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="⏮ ▶ ⏭" FontSize="9" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                </Grid>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -447,19 +570,26 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#226366F1" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="🚀" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#266366F1" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="🚀" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeApps" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusApps" Text="✓ Aktif" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeApps" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusApps" Text="✓ Aktif" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Hızlı Uygulamalar" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="Gezgin, Terminal, Not Defteri" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Hızlı Uygulamalar" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Gezgin, Terminal, Not Defteri" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="📁 💻 🔢 📝 ⚡ 🌐" FontSize="10" FontWeight="Bold" Foreground="#818CF8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border Width="24" Height="24" CornerRadius="6" Background="#22FFFFFF" Margin="2,0"><TextBlock Text="📁" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                                    <Border Width="24" Height="24" CornerRadius="6" Background="#22FFFFFF" Margin="2,0"><TextBlock Text="💻" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                                    <Border Width="24" Height="24" CornerRadius="6" Background="#22FFFFFF" Margin="2,0"><TextBlock Text="🔢" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                                    <Border Width="24" Height="24" CornerRadius="6" Background="#22FFFFFF" Margin="2,0"><TextBlock Text="📝" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                                    <Border Width="24" Height="24" CornerRadius="6" Background="#22FFFFFF" Margin="2,0"><TextBlock Text="⚡" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                                </StackPanel>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -472,7 +602,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- 10. Ses Seviyesi & Kontrol (YENİ WIDGET) -->
+                    <!-- 10. Ses Seviyesi & Kontrol -->
                     <Border x:Name="CardVolume" Style="{StaticResource WidgetCardStyle}" Tag="volume"
                             PreviewMouseLeftButtonDown="WidgetCard_PreviewMouseLeftButtonDown"
                             PreviewMouseMove="WidgetCard_PreviewMouseMove"
@@ -484,19 +614,24 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#2214B8A6" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="🔊" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#2614B8A6" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="🔊" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeVolume" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusVolume" Text="+ Ekle" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeVolume" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusVolume" Text="+ Ekle" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Ses Seviyesi" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="Slider &amp; Sessize Al" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Ses Seviyesi" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Slider &amp; Sessize Al" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="🔊 70% [ ━━━━●━━ ]" FontSize="10" FontWeight="Bold" Foreground="#2DD4BF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="🔊" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <ProgressBar Value="70" Maximum="100" Height="4" Width="70" Foreground="#2DD4BF" Background="#22FFFFFF" BorderThickness="0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="70%" FontSize="10" FontWeight="Bold" Foreground="#2DD4BF" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -508,7 +643,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- 11. Pano Geçmişi Widget'ı (YENİ WIDGET) -->
+                    <!-- 11. Pano Geçmişi Widget'ı -->
                     <Border x:Name="CardClipboard" Style="{StaticResource WidgetCardStyle}" Tag="clipboard"
                             PreviewMouseLeftButtonDown="WidgetCard_PreviewMouseLeftButtonDown"
                             PreviewMouseMove="WidgetCard_PreviewMouseMove"
@@ -520,19 +655,23 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#22F43F5E" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="📋" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#26F43F5E" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="📋" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeClipboard" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusClipboard" Text="+ Ekle" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeClipboard" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusClipboard" Text="+ Ekle" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Pano Geçmişi" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="Son Kopyalananı Göster &amp; Yapıştır" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Pano Geçmişi" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Son Kopyalananı Göster &amp; Yapıştır" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="📋 Son Kopyalanan Öğe" FontSize="10" FontWeight="Bold" Foreground="#FB7185" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="📋" FontSize="12" Margin="0,0,4,0"/>
+                                    <TextBlock Text="https://github.com/..." FontSize="9" FontWeight="SemiBold" Foreground="#FB7185"/>
+                                </StackPanel>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -556,19 +695,25 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#2638BDF8" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock x:Name="TxtCardCustomIcon" Text="⚡" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#2638BDF8" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock x:Name="TxtCardCustomIcon" Text="⚡" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeCustomAction" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusCustomAction" Text="✓ Aktif" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeCustomAction" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusCustomAction" Text="✓ Aktif" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock x:Name="TxtCardCustomTitle" Text="Özel Araç" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="Sık kullanılan script/exe" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock x:Name="TxtCardCustomTitle" Text="Özel Araç" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Sık kullanılan script/exe" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="⚡ Özel Araç Başlatıcı" FontSize="10" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border Width="22" Height="22" CornerRadius="6" Background="#2638BDF8" Margin="0,0,6,0">
+                                        <TextBlock Text="⚡" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="Terminal / WT.exe [AÇ]" FontSize="10" FontWeight="Bold" Foreground="#38BDF8"/>
+                                </StackPanel>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -592,19 +737,23 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#2210B981" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="🌐" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#2610B981" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="🌐" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeNetwork" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusNetwork" Text="✓ Aktif" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeNetwork" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusNetwork" Text="✓ Aktif" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Canlı Ağ &amp; Ping" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="İnternet Gecikmesi" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Canlı Ağ &amp; Ping" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="İnternet Gecikmesi" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="🌐 18 ms Ping (Çevrimiçi)" FontSize="10" FontWeight="Bold" Foreground="#34D399" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="🌐" FontSize="12" Margin="0,0,4,0"/>
+                                    <TextBlock Text="18 ms Ping (ÇEVRİMİÇİ)" FontSize="10" FontWeight="Bold" Foreground="#34D399"/>
+                                </StackPanel>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -628,19 +777,23 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#22F59E0B" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="📌" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#26F59E0B" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="📌" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeNotes" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusNotes" Text="✓ Aktif" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeNotes" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusNotes" Text="✓ Aktif" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Hızlı Notlar" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="Anlık yapışkan not paneli" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Hızlı Notlar" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Anlık yapışkan not paneli" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="📝 Anlık Not Aç / Kapat" FontSize="10" FontWeight="Bold" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="📝" FontSize="12" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Yapışkan Not Paneli Aç" FontSize="10" FontWeight="Bold" Foreground="#FBBF24"/>
+                                </StackPanel>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -663,19 +816,23 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <DockPanel Grid.Row="0">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="#2210B981" Margin="0,0,6,0" DockPanel.Dock="Left">
-                                    <TextBlock Text="🔋" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#2610B981" Margin="0,0,8,0" DockPanel.Dock="Left">
+                                    <TextBlock Text="🔋" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <Border x:Name="BadgeBattery" DockPanel.Dock="Right" CornerRadius="8" Padding="6,1" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
-                                    <TextBlock x:Name="TxtStatusBattery" Text="✓ Aktif" FontSize="9" FontWeight="SemiBold" Foreground="#34D399"/>
+                                <Border x:Name="BadgeBattery" DockPanel.Dock="Right" CornerRadius="10" Padding="8,2" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1">
+                                    <TextBlock x:Name="TxtStatusBattery" Text="✓ Aktif" FontSize="10" FontWeight="SemiBold" Foreground="#34D399"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Pil &amp; Batarya" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
-                                    <TextBlock Text="Şarj durumu ve yüzde" FontSize="8" Foreground="#88FFFFFF"/>
+                                    <TextBlock Text="Pil &amp; Batarya" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Şarj durumu ve yüzde" FontSize="9" Foreground="#88FFFFFF"/>
                                 </StackPanel>
                             </DockPanel>
-                            <Border Grid.Row="1" Background="#0C1424" CornerRadius="6" Margin="0,4,0,4" Padding="6,2" VerticalAlignment="Center">
-                                <TextBlock Text="⚡ %92 Şarj Ediliyor" FontSize="10" FontWeight="Bold" Foreground="#34D399" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- Canlı Önizleme -->
+                            <Border Grid.Row="1" Style="{StaticResource CardPreviewContainerStyle}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="⚡" FontSize="12" Margin="0,0,4,0"/>
+                                    <TextBlock Text="%92 Şarj Ediliyor" FontSize="10" FontWeight="Bold" Foreground="#34D399"/>
+                                </StackPanel>
                             </Border>
                             <DockPanel Grid.Row="2" LastChildFill="False">
                                 <TextBlock Text="Boyut:" FontSize="9" Foreground="#64748B" VerticalAlignment="Center" DockPanel.Dock="Left"/>
@@ -686,7 +843,7 @@
                         </Grid>
                     </Border>
 
-                </WrapPanel>
+                </UniformGrid>
             </ScrollViewer>
         </Grid>
     </Border>

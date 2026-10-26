@@ -43,6 +43,23 @@ namespace OxiDock
         public string QuickSearchSize { get; set; } = "1x2";
         public string VolumeSize { get; set; } = "1x2";
         public string ClipboardSize { get; set; } = "1x2";
+
+        // Kullanıcının Oluşturduğu Özel Uygulama Widget'ları
+        public List<CustomAppWidget> CustomWidgets { get; set; } = new();
+    }
+
+    public class CustomAppWidget
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Title { get; set; } = "Uygulama";
+        public string Subtitle { get; set; } = "Hızlı Başlat";
+        public string TargetPath { get; set; } = "";
+        public string Arguments { get; set; } = "";
+        public string IconType { get; set; } = "Fluent"; // "Emoji", "Monochrome", "Fluent", "Material", "Color"
+        public string IconValue { get; set; } = "📄"; // Emoji, Harf/Sembol veya Glyph
+        public string AccentColor { get; set; } = "#38BDF8"; // Widget vurgusu
+        public string WidgetSize { get; set; } = "1x1"; // "1x1", "1x2", "1x3"
+        public bool IsEnabled { get; set; } = true;
     }
 
     public class AppSettings
@@ -169,6 +186,10 @@ namespace OxiDock
                                 new DockProfile { Id = "default-3", Name = "3. Odaklanma" }
                             };
                             settings.ActiveProfileId = "default-1";
+                        }
+                        foreach (var prof in settings.Profiles)
+                        {
+                            prof.CustomWidgets ??= new List<CustomAppWidget>();
                         }
                         return settings;
                     }
