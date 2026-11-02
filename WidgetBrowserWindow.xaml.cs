@@ -35,12 +35,21 @@ namespace OxiDock
         private static readonly SolidColorBrush BrushPillInactiveBg = new SolidColorBrush(MediaColor.FromArgb(20, 255, 255, 255));
         private static readonly SolidColorBrush BrushPillInactiveFg = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)); // Muted
 
+        private string _activeCategory = "all";
+        private readonly System.Collections.Generic.List<Border> _dynamicCustomCards = new();
+
         public WidgetBrowserWindow(AppSettings settings)
         {
             InitializeComponent();
             _settings = settings;
             HighlightCategoryTab(BtnCatAll);
             LoadWidgetStates();
+        }
+
+        public void RefreshFromDock()
+        {
+            LoadWidgetStates();
+            FilterCategory(_activeCategory);
         }
 
         public void PositionAboveDock(double dockLeft, double dockTop, double dockWidth, double dockHeight)
@@ -105,6 +114,170 @@ namespace OxiDock
             UpdateSizePills2(BtnClipboard1x1, BtnClipboard1x2, p.ClipboardSize);
             UpdateSizePills2(BtnCustomAction1x1, BtnCustomAction1x2, p.CustomActionSize);
             UpdateSizePills2(BtnNetwork1x1, BtnNetwork1x2, p.NetworkSize);
+
+            // 3. Kullanıcının Oluşturduğu Özel Widget Kartlarını Kütüphanede Göster (Düzenle / Boyutlandır / Sil)
+            RenderCustomWidgetCardsInLibrary(p);
+        }
+
+        private void RenderCustomWidgetCardsInLibrary(DockProfile p)
+        {
+            foreach (var oldCard in _dynamicCustomCards)
+            {
+                PnlWidgetList.Children.Remove(oldCard);
+            }
+            _dynamicCustomCards.Clear();
+
+            p.CustomWidgets ??= new System.Collections.Generic.List<CustomAppWidget>();
+            bool visibleInFilter = (_activeCategory == "all" || _activeCategory == "custom" || _activeCategory == "shortcuts");
+
+            for (int i = 0; i < p.CustomWidgets.Count; i++)
+            {
+                var cw = p.CustomWidgets[i];
+                var accent = MainWindow.ParseAccentColor(cw.AccentColor);
+
+                var card = new Border
+                {
+                    Style = (Style)FindResource("WidgetCardStyle"),
+                    Tag = $"customwidget:{cw.Id}",
+                    Visibility = visibleInFilter ? Visibility.Visible : Visibility.Collapsed
+                };
+                card.PreviewMouseLeftButtonDown += WidgetCard_PreviewMouseLeftButtonDown;
+                card.PreviewMouseMove += WidgetCard_PreviewMouseMove;
+                card.MouseLeftButtonUp += WidgetCard_MouseLeftButtonUp;
+
+                var grid = new Grid();
+                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+                // Üst Başlık + Durum Rozeti
+                var dpTop = new DockPanel();
+                var badge = new Border
+                {
+                    CornerRadius = new CornerRadius(6),
+                    Padding = new Thickness(7, 2, 7, 2),
+                    BorderThickness = new Thickness(1),
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                var txtStatus = new TextBlock { FontSize = 10, FontWeight = FontWeights.Bold };
+                badge.Child = txtStatus;
+                UpdateBadge(badge, txtStatus, cw.IsEnabled);
+                DockPanel.SetDock(badge, Dock.Right);
+                dpTop.Children.Add(badge);
+
+                var spHeader = new StackPanel();
+                spHeader.Children.Add(new TextBlock
+                {
+                    Text = $"✨ {cw.Title}",
+                    FontWeight = FontWeights.Bold,
+                    FontSize = 13,
+                    Foreground = System.Windows.Media.Brushes.White,
+                    TextTrimming = TextTrimming.CharacterEllipsis
+                });
+                spHeader.Children.Add(new TextBlock
+                {
+                    Text = $"{cw.CardTemplate} • {cw.Subtitle}",
+                    FontSize = 10,
+                    Foreground = new SolidColorBrush(accent),
+                    Margin = new Thickness(0, 2, 0, 0),
+                    TextTrimming = TextTrimming.CharacterEllipsis
+                });
+                dpTop.Children.Add(spHeader);
+                Grid.SetRow(dpTop, 0);
+                grid.Children.Add(dpTop);
+
+                // Orta Canlı Görsel Önizleme
+                var previewBox = new Border
+                {
+                    Background = new SolidColorBrush(MediaColor.FromArgb(140, 12, 17, 29)),
+                    BorderBrush = new SolidColorBrush(MediaColor.FromArgb(65, accent.R, accent.G, accent.B)),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(12),
+                    Margin = new Thickness(0, 8, 0, 8),
+                    Padding = new Thickness(8, 6, 8, 6)
+                };
+                if (Owner is MainWindow mw)
+                {
+                    previewBox.Child = mw.BuildCustomWidgetPreviewCard(cw);
+                }
+                Grid.SetRow(previewBox, 1);
+                grid.Children.Add(previewBox);
+
+                // Alt Bar: Boyut Hapları (1x1, 1x2, 1x3) + ✎ Düzenle + 🗑️ Sil
+                var dpBottom = new DockPanel { VerticalAlignment = VerticalAlignment.Center };
+
+                var spActions = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+                var btnEdit = new Button
+                {
+                    Style = (Style)FindResource("SizePillStyle"),
+                    Content = "✎ Düzenle",
+                    Background = new SolidColorBrush(MediaColor.FromArgb(45, 56, 189, 248)),
+                    Foreground = new SolidColorBrush(MediaColor.FromRgb(56, 189, 248)),
+                    FontWeight = FontWeights.Bold,
+                    ToolTip = "Widget Stüdyosunda Özelleştir"
+                };
+                btnEdit.Click += (s, ev) =>
+                {
+                    ev.Handled = true;
+                    if (Owner is MainWindow mainWin)
+                    {
+                        mainWin.ShowCustomWidgetEditorDialog(cw);
+                    }
+                };
+
+                var btnDel = new Button
+                {
+                    Style = (Style)FindResource("SizePillStyle"),
+                    Content = "🗑️ Sil",
+                    Background = new SolidColorBrush(MediaColor.FromArgb(45, 248, 113, 113)),
+                    Foreground = new SolidColorBrush(MediaColor.FromRgb(248, 113, 113)),
+                    FontWeight = FontWeights.Bold,
+                    ToolTip = "Bu Özel Widget'ı Kaldır"
+                };
+                btnDel.Click += (s, ev) =>
+                {
+                    ev.Handled = true;
+                    p.CustomWidgets.Remove(cw);
+                    _settings.Save();
+                    OnSettingsUpdated?.Invoke(_settings);
+                    LoadWidgetStates();
+                };
+
+                spActions.Children.Add(btnEdit);
+                spActions.Children.Add(btnDel);
+                DockPanel.SetDock(spActions, Dock.Right);
+                dpBottom.Children.Add(spActions);
+
+                var spSizes = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+                foreach (var sz in new[] { "1x1", "1x2", "1x3" })
+                {
+                    var bSz = new Button
+                    {
+                        Style = (Style)FindResource("SizePillStyle"),
+                        Content = sz
+                    };
+                    SetPillStyle(bSz, cw.WidgetSize == sz);
+                    string capturedSz = sz;
+                    bSz.Click += (s, ev) =>
+                    {
+                        ev.Handled = true;
+                        cw.WidgetSize = capturedSz;
+                        cw.IsEnabled = true;
+                        _settings.Save();
+                        OnSettingsUpdated?.Invoke(_settings);
+                        LoadWidgetStates();
+                    };
+                    spSizes.Children.Add(bSz);
+                }
+                dpBottom.Children.Add(spSizes);
+
+                Grid.SetRow(dpBottom, 2);
+                grid.Children.Add(dpBottom);
+
+                card.Child = grid;
+                PnlWidgetList.Children.Insert(i, card);
+                _dynamicCustomCards.Add(card);
+            }
         }
 
         private static void UpdateSizePills(Button b1, Button b2, Button b3, string current)
@@ -162,7 +335,7 @@ namespace OxiDock
 
         private void HighlightCategoryTab(Button activeBtn)
         {
-            var tabs = new[] { BtnCatAll, BtnCatTime, BtnCatSystem, BtnCatWeb, BtnCatShortcuts };
+            var tabs = new[] { BtnCatAll, BtnCatCustom, BtnCatTime, BtnCatSystem, BtnCatWeb, BtnCatShortcuts };
             foreach (var t in tabs)
             {
                 if (t == null) continue;
@@ -183,11 +356,18 @@ namespace OxiDock
 
         private void FilterCategory(string cat)
         {
+            _activeCategory = cat;
             bool showAll = cat == "all";
+            bool showCustom = showAll || cat == "custom" || cat == "shortcuts";
             bool showTime = showAll || cat == "time";
             bool showSystem = showAll || cat == "system";
             bool showWeb = showAll || cat == "web";
             bool showShortcuts = showAll || cat == "shortcuts";
+
+            foreach (var dynCard in _dynamicCustomCards)
+            {
+                dynCard.Visibility = showCustom ? Visibility.Visible : Visibility.Collapsed;
+            }
 
             CardClock.Visibility = showTime ? Visibility.Visible : Visibility.Collapsed;
             CardPomodoro.Visibility = showTime ? Visibility.Visible : Visibility.Collapsed;
@@ -325,6 +505,20 @@ namespace OxiDock
         private void ToggleWidget(string widgetKey)
         {
             var profile = _settings.GetActiveProfile();
+
+            if (widgetKey.StartsWith("customwidget:", StringComparison.OrdinalIgnoreCase))
+            {
+                string id = widgetKey.Substring("customwidget:".Length);
+                var cw = profile.CustomWidgets?.Find(x => x.Id == id);
+                if (cw != null)
+                {
+                    cw.IsEnabled = !cw.IsEnabled;
+                    _settings.Save();
+                    OnSettingsUpdated?.Invoke(_settings);
+                    LoadWidgetStates();
+                }
+                return;
+            }
 
             switch (widgetKey.ToLowerInvariant())
             {

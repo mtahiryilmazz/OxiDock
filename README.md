@@ -50,7 +50,7 @@ OxiDock; saat, hava durumu, sistem istatistikleri, müzik kontrolü, Pomodoro ve
 Her profil kendi widget setini, özel uygulama widget'larını ve boyutlarını saklar. Varsayılan profiller: **Standart**, **İş & Geliştirici**, **Odaklanma**. Profil ekleme, yeniden adlandırma ve silme desteklenir.
 
 ### 📚 Widget Kütüphanesi (3x Sütun & Zengin Önizlemeler)
-Windows 11 ve CoolDock estetiğinde, dikey kaydırmalı 3 sütunlu (`UniformGrid Columns="3"`) kütüphane paneli. Her widget için gerçek zamanlı kart içi önizleme, anlık boyut değiştirme hapları (`1x1`, `1x2`, `1x3`) ve doğrudan dock'a **sürükle-bırak** desteği. Ayrıca kütüphane üzerinden tek tıkla yeni özel uygulama widget'ı oluşturma desteği.
+Windows 11 ve OxiDock estetiğinde, dikey kaydırmalı 3 sütunlu (`UniformGrid Columns="3"`) kütüphane paneli. Her widget için gerçek zamanlı kart içi önizleme, anlık boyut değiştirme hapları (`1x1`, `1x2`, `1x3`) ve doğrudan dock'a **sürükle-bırak** desteği. Ayrıca kütüphane üzerinden tek tıkla yeni özel uygulama widget'ı oluşturma desteği.
 
 ### 🤖 Yerel AI Asistan API'si (MCP uyumlu)
 OxiDock, yalnızca `127.0.0.1` üzerinde dinleyen hafif bir HTTP sunucusu barındırır (varsayılan port **48199**). Claude, Cursor, Antigravity gibi yerel AI istemcileri veya kendi betikleriniz dock'u inceleyip kontrol edebilir.

@@ -220,6 +220,12 @@ namespace OxiDock
             // 6. Konumlandırma
             RepositionDock();
 
+            // 6.5 Açık olan Widget Kütüphanesi varsa senkronize et
+            if (_widgetBrowserWindow != null && _widgetBrowserWindow.IsLoaded)
+            {
+                _widgetBrowserWindow.RefreshFromDock();
+            }
+
             // 7. Hava Durumu Şehir Kontrolü
             if (_settings.WeatherCity != _lastWeatherCity)
             {
@@ -607,6 +613,21 @@ namespace OxiDock
 
         private void Window_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
+            if (e.OriginalSource is DependencyObject dep)
+            {
+                DependencyObject? cur = dep;
+                while (cur != null && cur != this)
+                {
+                    if (cur is FrameworkElement fe && fe.ContextMenu != null)
+                    {
+                        fe.ContextMenu.PlacementTarget = fe;
+                        fe.ContextMenu.IsOpen = true;
+                        e.Handled = true;
+                        return;
+                    }
+                    cur = VisualTreeHelper.GetParent(cur);
+                }
+            }
             ShowDockContextMenu();
         }
 
@@ -816,6 +837,14 @@ namespace OxiDock
 
         private void EnableWidgetInProfile(DockProfile profile, string widgetKey)
         {
+            if (widgetKey.StartsWith("customwidget:", StringComparison.OrdinalIgnoreCase))
+            {
+                string id = widgetKey.Substring("customwidget:".Length);
+                var cw = profile.CustomWidgets?.Find(x => x.Id == id);
+                if (cw != null) cw.IsEnabled = true;
+                return;
+            }
+
             switch (widgetKey.ToLowerInvariant())
             {
                 case "clock": profile.ShowClock = true; break;
@@ -949,62 +978,388 @@ namespace OxiDock
             dlg.ShowDialog();
         }
 
+        private static string? ResolveExecutablePath(string rawPath)
+        {
+            if (string.IsNullOrWhiteSpace(rawPath)) return null;
+            string cleaned = Environment.ExpandEnvironmentVariables(rawPath.Trim().Trim('"'));
+            if (cleaned.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                cleaned.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            if (File.Exists(cleaned)) return cleaned;
+
+            string fileName = cleaned;
+            if (!fileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
+                !fileName.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) &&
+                !fileName.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase) &&
+                !fileName.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
+            {
+                fileName += ".exe";
+            }
+
+            // 1. Registry App Paths (winword.exe, excel.exe, chrome.exe vb.)
+            try
+            {
+                using var keyLM = Microsoft.Win32.Registry.LocalMachine.OpenSubKey($@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{Path.GetFileName(fileName)}");
+                if (keyLM?.GetValue(null) is string regPathLM && File.Exists(regPathLM.Trim('"')))
+                    return regPathLM.Trim('"');
+
+                using var keyCU = Microsoft.Win32.Registry.CurrentUser.OpenSubKey($@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{Path.GetFileName(fileName)}");
+                if (keyCU?.GetValue(null) is string regPathCU && File.Exists(regPathCU.Trim('"')))
+                    return regPathCU.Trim('"');
+            }
+            catch { }
+
+            // 2. PATH ve Sistem Klasörleri
+            var searchDirs = new List<string>
+            {
+                Environment.SystemDirectory,
+                Environment.GetFolderPath(Environment.SpecialFolder.Windows),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "WindowsApps")
+            };
+            var envPath = Environment.GetEnvironmentVariable("PATH");
+            if (!string.IsNullOrEmpty(envPath))
+            {
+                searchDirs.AddRange(envPath.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries));
+            }
+
+            foreach (var dir in searchDirs)
+            {
+                try
+                {
+                    string candidate = Path.Combine(dir, fileName);
+                    if (File.Exists(candidate)) return candidate;
+                    string candidateRaw = Path.Combine(dir, cleaned);
+                    if (File.Exists(candidateRaw)) return candidateRaw;
+                }
+                catch { }
+            }
+
+            return null;
+        }
+
+        public static ImageSource? TryExtractAppIconImage(string targetPath)
+        {
+            try
+            {
+                string? resolved = ResolveExecutablePath(targetPath);
+                if (string.IsNullOrEmpty(resolved) || !File.Exists(resolved)) return null;
+
+                using var sysIcon = System.Drawing.Icon.ExtractAssociatedIcon(resolved);
+                if (sysIcon == null) return null;
+
+                var bmp = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
+                    sysIcon.Handle,
+                    Int32Rect.Empty,
+                    System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+                bmp.Freeze();
+                return bmp;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public static MediaColor ParseAccentColor(string? hex)
+        {
+            var fallback = MediaColor.FromRgb(56, 189, 248);
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(hex))
+                {
+                    var converted = System.Windows.Media.ColorConverter.ConvertFromString(hex.Trim());
+                    if (converted is MediaColor mc) return mc;
+                }
+            }
+            catch { }
+            return fallback;
+        }
+
+        public void ApplyCustomWidgetSurface(Border container, CustomAppWidget w)
+        {
+            var accent = ParseAccentColor(w.AccentColor);
+            double radius = w.CornerStyle switch
+            {
+                "Capsule" => 18,
+                "Sharp" => 7,
+                _ => 13 // Squircle (HyperOS / HarmonyOS)
+            };
+            container.CornerRadius = new CornerRadius(radius);
+
+            switch (w.BackgroundMode)
+            {
+                case "Gradient":
+                    container.Background = new LinearGradientBrush(
+                        MediaColor.FromArgb(145, accent.R, accent.G, accent.B),
+                        MediaColor.FromArgb(210, 15, 23, 42),
+                        45.0);
+                    container.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(170, accent.R, accent.G, accent.B));
+                    container.BorderThickness = new Thickness(1.2);
+                    break;
+                case "Solid":
+                    container.Background = new LinearGradientBrush(
+                        MediaColor.FromArgb(235, accent.R, accent.G, accent.B),
+                        MediaColor.FromArgb(210, (byte)(accent.R * 0.7), (byte)(accent.G * 0.7), (byte)(accent.B * 0.7)),
+                        35.0);
+                    container.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(220, 255, 255, 255));
+                    container.BorderThickness = new Thickness(1);
+                    break;
+                case "Outline":
+                    container.Background = new SolidColorBrush(MediaColor.FromArgb(120, 12, 16, 26));
+                    container.BorderBrush = new SolidColorBrush(accent);
+                    container.BorderThickness = new Thickness(1.5);
+                    break;
+                default: // Glass (HarmonyOS / HyperOS Frosted Glass)
+                    container.Background = new LinearGradientBrush(
+                        MediaColor.FromArgb(55, accent.R, accent.G, accent.B),
+                        MediaColor.FromArgb(35, 255, 255, 255),
+                        45.0);
+                    container.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(95, accent.R, accent.G, accent.B));
+                    container.BorderThickness = new Thickness(1);
+                    break;
+            }
+        }
+
         public void RenderCustomWidgets(DockProfile profile)
         {
             SpCustomWidgets.Children.Clear();
             if (profile.CustomWidgets == null) return;
 
-            foreach (var widget in profile.CustomWidgets)
+            for (int idx = 0; idx < profile.CustomWidgets.Count; idx++)
             {
+                var widget = profile.CustomWidgets[idx];
                 if (!widget.IsEnabled) continue;
 
                 var border = new Border
                 {
                     Style = (Style)FindResource("WidgetContainerStyle"),
                     Cursor = WpfCursors.Hand,
-                    Tag = widget
+                    Tag = widget,
+                    Padding = new Thickness(4, 2, 4, 2)
                 };
 
-                // Tooltip
-                border.ToolTip = $"{widget.Title}\n{widget.Subtitle} • Tıkla: Başlat | Sağ Tık: Düzenle / Sil";
+                ApplyCustomWidgetSurface(border, widget);
 
-                // Tıklama ile çalıştırma
+                border.ToolTip = $"✨ {widget.Title} ({widget.WidgetSize})\n{widget.Subtitle}\n• Sol Tık: Başlat | Üzerine Gel: ✎ Düzenle / ✕ Sil | Sağ Tık: Tüm Seçenekler";
+
+                // Ana kapsayıcı: İçerik + Android/HyperOS Hover Aksiyon Barı (✎ Düzenle | 📏 Boyut | ✕ Kaldır)
+                var rootGrid = new Grid();
+                var contentEl = BuildCustomWidgetContent(widget);
+                rootGrid.Children.Add(contentEl);
+
+                var hoverPill = new Border
+                {
+                    Background = new SolidColorBrush(MediaColor.FromArgb(235, 15, 23, 42)),
+                    BorderBrush = new SolidColorBrush(MediaColor.FromArgb(140, 56, 189, 248)),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(7),
+                    Padding = new Thickness(2, 1, 2, 1),
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(0, -2, -2, 0),
+                    Visibility = Visibility.Collapsed
+                };
+
+                var spHoverActions = new StackPanel { Orientation = WpfOrientation.Horizontal };
+
+                var btnQuickEdit = new WpfButton
+                {
+                    Style = (Style)FindResource("DockButtonStyle"),
+                    Width = 18,
+                    Height = 18,
+                    Content = new TextBlock { Text = "✎", FontSize = 9, Foreground = new SolidColorBrush(MediaColor.FromRgb(56, 189, 248)), FontWeight = FontWeights.Bold },
+                    ToolTip = "Widget Stüdyosunda Düzenle / Özelleştir"
+                };
+                btnQuickEdit.Click += (s, ev) =>
+                {
+                    ev.Handled = true;
+                    ShowCustomWidgetEditorDialog(widget);
+                };
+
+                var btnQuickSize = new WpfButton
+                {
+                    Style = (Style)FindResource("DockButtonStyle"),
+                    Width = 18,
+                    Height = 18,
+                    Margin = new Thickness(2, 0, 2, 0),
+                    Content = new TextBlock { Text = "📏", FontSize = 8 },
+                    ToolTip = "Boyutu Değiştir (1x1 → 1x2 → 1x3)"
+                };
+                btnQuickSize.Click += (s, ev) =>
+                {
+                    ev.Handled = true;
+                    widget.WidgetSize = widget.WidgetSize switch
+                    {
+                        "1x1" => "1x2",
+                        "1x2" => "1x3",
+                        _ => "1x1"
+                    };
+                    _settings.Save();
+                    ApplySettings(_settings);
+                };
+
+                var btnQuickDelete = new WpfButton
+                {
+                    Style = (Style)FindResource("DockButtonStyle"),
+                    Width = 18,
+                    Height = 18,
+                    Content = new TextBlock { Text = "✕", FontSize = 9, Foreground = new SolidColorBrush(MediaColor.FromRgb(248, 113, 113)), FontWeight = FontWeights.Bold },
+                    ToolTip = "Widget'ı Dock'tan Kaldır"
+                };
+                btnQuickDelete.Click += (s, ev) =>
+                {
+                    ev.Handled = true;
+                    profile.CustomWidgets.Remove(widget);
+                    _settings.Save();
+                    ApplySettings(_settings);
+                };
+
+                spHoverActions.Children.Add(btnQuickEdit);
+                spHoverActions.Children.Add(btnQuickSize);
+                spHoverActions.Children.Add(btnQuickDelete);
+                hoverPill.Child = spHoverActions;
+                rootGrid.Children.Add(hoverPill);
+
+                border.MouseEnter += (s, ev) => hoverPill.Visibility = Visibility.Visible;
+                border.MouseLeave += (s, ev) => hoverPill.Visibility = Visibility.Collapsed;
+
+                // Tıklama ile çalıştırma (hover butonlarına tıklanmadıysa)
                 border.MouseLeftButtonDown += (s, e) =>
                 {
                     if (e.ChangedButton == MouseButton.Left)
                     {
+                        if (e.OriginalSource is DependencyObject dep)
+                        {
+                            DependencyObject? cur = dep;
+                            while (cur != null && cur != border)
+                            {
+                                if (cur is WpfButton) return;
+                                cur = VisualTreeHelper.GetParent(cur);
+                            }
+                        }
+                        e.Handled = true;
                         LaunchCustomWidget(widget);
                     }
                 };
 
-                // Sağ tık menüsü (Ayar / Düzenleme / Silme)
+                // Zengin HarmonyOS 3 / HyperOS 3 Sağ Tık Menüsü
                 var cm = new WpfContextMenu
                 {
-                    Background = new SolidColorBrush(MediaColor.FromRgb(24, 24, 30)),
+                    Background = new SolidColorBrush(MediaColor.FromRgb(20, 22, 32)),
                     Foreground = WpfBrushes.White,
-                    BorderBrush = new SolidColorBrush(MediaColor.FromArgb(40, 255, 255, 255)),
+                    BorderBrush = new SolidColorBrush(MediaColor.FromArgb(80, 56, 189, 248)),
                     BorderThickness = new Thickness(1)
                 };
 
-                var miSettings = new WpfMenuItem { Header = $"⚙️  '{widget.Title}' Widget'ını Düzenle / Ayarlar..." };
+                var miLaunch = new WpfMenuItem { Header = $"🚀  '{widget.Title}' Uygulamasını Başlat", FontWeight = FontWeights.Bold };
+                miLaunch.Click += (s, e) => LaunchCustomWidget(widget);
+                cm.Items.Add(miLaunch);
+
+                var miSettings = new WpfMenuItem { Header = $"🎨  Widget Stüdyosunda Özelleştir / Düzenle...", Foreground = new SolidColorBrush(MediaColor.FromRgb(56, 189, 248)) };
                 miSettings.Click += (s, e) => ShowCustomWidgetEditorDialog(widget);
                 cm.Items.Add(miSettings);
 
-                var miSize = new WpfMenuItem { Header = "📏  Boyut Değiştir" };
+                cm.Items.Add(new WpfSeparator());
+
+                // Kart Şablonu Alt Menüsü (HarmonyOS 3 / HyperOS 3 / EMUI 13)
+                var miTemplate = new WpfMenuItem { Header = "✨  OS Kart Tasarımı (Harmony / HyperOS / EMUI)" };
+                void AddTemplateItem(string label, string key)
+                {
+                    var item = new WpfMenuItem { Header = label, IsChecked = widget.CardTemplate == key };
+                    item.Click += (s, e) => { widget.CardTemplate = key; _settings.Save(); ApplySettings(_settings); };
+                    miTemplate.Items.Add(item);
+                }
+                AddTemplateItem("🟢 HarmonyOS 3 Servis Kartı (Kapsül & Durum Noktası)", "HarmonyServiceCard");
+                AddTemplateItem("🔵 Xiaomi HyperOS 3 Süper İkon (3B Parlama & Rozet)", "HyperSuperIcon");
+                AddTemplateItem("🟠 Huawei EMUI 13 Akıllı Kombo (Çift Kısayol Grubu)", "EmuiComboCard");
+                AddTemplateItem("🌊 OxiDock Liquid Glass (Neon Gradyan Kart)", "LiquidGlassCard");
+                cm.Items.Add(miTemplate);
+
+                // Yüzey Stili Alt Menüsü
+                var miSurface = new WpfMenuItem { Header = "🪄  Arka Plan Yüzey Stili" };
+                void AddSurfaceItem(string label, string key)
+                {
+                    var item = new WpfMenuItem { Header = label, IsChecked = widget.BackgroundMode == key };
+                    item.Click += (s, e) => { widget.BackgroundMode = key; _settings.Save(); ApplySettings(_settings); };
+                    miSurface.Items.Add(item);
+                }
+                AddSurfaceItem("🪟 Buzlu Cam (Frosted Glass)", "Glass");
+                AddSurfaceItem("🌈 Çift Tonlu Gradyan (HyperOS Gradient)", "Gradient");
+                AddSurfaceItem("🎨 Tam Renkli Dolgu (Android 14 Solid)", "Solid");
+                AddSurfaceItem("⚡ Neon Çerçeve (Minimal Outline)", "Outline");
+                cm.Items.Add(miSurface);
+
+                // Boyut Değiştir Alt Menüsü
+                var miSize = new WpfMenuItem { Header = "📏  Android Boyutu Değiştir" };
                 var mi1x1 = new WpfMenuItem { Header = "1x1 Kare Kompakt", IsChecked = widget.WidgetSize == "1x1" };
                 mi1x1.Click += (s, e) => { widget.WidgetSize = "1x1"; _settings.Save(); ApplySettings(_settings); };
                 var mi1x2 = new WpfMenuItem { Header = "1x2 Yatay Standart", IsChecked = widget.WidgetSize == "1x2" };
                 mi1x2.Click += (s, e) => { widget.WidgetSize = "1x2"; _settings.Save(); ApplySettings(_settings); };
-                var mi1x3 = new WpfMenuItem { Header = "1x3 Genişletilmiş Kart", IsChecked = widget.WidgetSize == "1x3" };
+                var mi1x3 = new WpfMenuItem { Header = "1x3 Genişletilmiş Servis Kartı", IsChecked = widget.WidgetSize == "1x3" };
                 mi1x3.Click += (s, e) => { widget.WidgetSize = "1x3"; _settings.Save(); ApplySettings(_settings); };
                 miSize.Items.Add(mi1x1);
                 miSize.Items.Add(mi1x2);
                 miSize.Items.Add(mi1x3);
                 cm.Items.Add(miSize);
 
+                // Sıralama & Çoğaltma
+                int capturedIdx = idx;
+                var miMoveLeft = new WpfMenuItem { Header = "⬅️  Sola Kaydır", IsEnabled = capturedIdx > 0 };
+                miMoveLeft.Click += (s, e) =>
+                {
+                    if (capturedIdx > 0)
+                    {
+                        profile.CustomWidgets.RemoveAt(capturedIdx);
+                        profile.CustomWidgets.Insert(capturedIdx - 1, widget);
+                        _settings.Save();
+                        ApplySettings(_settings);
+                    }
+                };
+                cm.Items.Add(miMoveLeft);
+
+                var miMoveRight = new WpfMenuItem { Header = "➡️  Sağa Kaydır", IsEnabled = capturedIdx < profile.CustomWidgets.Count - 1 };
+                miMoveRight.Click += (s, e) =>
+                {
+                    if (capturedIdx < profile.CustomWidgets.Count - 1)
+                    {
+                        profile.CustomWidgets.RemoveAt(capturedIdx);
+                        profile.CustomWidgets.Insert(capturedIdx + 1, widget);
+                        _settings.Save();
+                        ApplySettings(_settings);
+                    }
+                };
+                cm.Items.Add(miMoveRight);
+
+                var miDuplicate = new WpfMenuItem { Header = "📋  Widget'ı Çoğalt (Kopya Oluştur)" };
+                miDuplicate.Click += (s, e) =>
+                {
+                    var clone = JsonSerializer.Deserialize<CustomAppWidget>(JsonSerializer.Serialize(widget));
+                    if (clone != null)
+                    {
+                        clone.Id = Guid.NewGuid().ToString();
+                        clone.Title = widget.Title + " +";
+                        profile.CustomWidgets.Add(clone);
+                        _settings.Save();
+                        ApplySettings(_settings);
+                    }
+                };
+                cm.Items.Add(miDuplicate);
+
                 cm.Items.Add(new WpfSeparator());
 
-                var miDelete = new WpfMenuItem { Header = $"🗑️  '{widget.Title}' Widget'ını Kaldır", Foreground = new SolidColorBrush(MediaColor.FromRgb(248, 113, 113)) };
+                var miHide = new WpfMenuItem { Header = "👁️  Dock'ta Gizle (Kütüphanede Tut)" };
+                miHide.Click += (s, e) =>
+                {
+                    widget.IsEnabled = false;
+                    _settings.Save();
+                    ApplySettings(_settings);
+                };
+                cm.Items.Add(miHide);
+
+                var miDelete = new WpfMenuItem { Header = $"🗑️  '{widget.Title}' Widget'ını Kalıcı Kaldır", Foreground = new SolidColorBrush(MediaColor.FromRgb(248, 113, 113)), FontWeight = FontWeights.Bold };
                 miDelete.Click += (s, e) =>
                 {
                     profile.CustomWidgets.Remove(widget);
@@ -1014,34 +1369,35 @@ namespace OxiDock
                 cm.Items.Add(miDelete);
 
                 border.ContextMenu = cm;
-
-                // İçerik Görünümü
-                var contentGrid = BuildCustomWidgetContent(widget);
-                border.Child = contentGrid;
+                border.Child = rootGrid;
 
                 SpCustomWidgets.Children.Add(border);
             }
         }
 
-        private FrameworkElement BuildCustomWidgetContent(CustomAppWidget w)
+        public Border BuildCustomWidgetPreviewCard(CustomAppWidget w)
         {
-            var accentColor = MediaColor.FromRgb(56, 189, 248);
-            try
+            var previewBorder = new Border
             {
-                if (!string.IsNullOrWhiteSpace(w.AccentColor))
-                {
-                    var converted = System.Windows.Media.ColorConverter.ConvertFromString(w.AccentColor);
-                    if (converted is MediaColor mc) accentColor = mc;
-                }
-            }
-            catch { }
+                Padding = new Thickness(6, 4, 6, 4),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            ApplyCustomWidgetSurface(previewBorder, w);
+            previewBorder.Child = BuildCustomWidgetContent(w);
+            return previewBorder;
+        }
 
-            // İkon Gövdesi
+        public static Border BuildStyledIconElement(CustomAppWidget w, double boxSize = 30, double fontSize = 14)
+        {
+            var accentColor = ParseAccentColor(w.AccentColor);
+            double radius = w.CardTemplate == "HyperSuperIcon" ? boxSize * 0.34 : boxSize * 0.28;
+
             var iconBorder = new Border
             {
-                Width = 28,
-                Height = 28,
-                CornerRadius = new CornerRadius(8),
+                Width = boxSize,
+                Height = boxSize,
+                CornerRadius = new CornerRadius(radius),
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = System.Windows.HorizontalAlignment.Center
             };
@@ -1049,148 +1405,406 @@ namespace OxiDock
             var iconTxt = new TextBlock
             {
                 Text = string.IsNullOrWhiteSpace(w.IconValue) ? "📄" : w.IconValue,
-                FontSize = 13,
+                FontSize = fontSize,
                 FontWeight = FontWeights.Bold,
                 HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
 
-            // İkon Stil Teması (Siyah-Beyaz, Fluent, Material, Renkli)
             switch (w.IconType)
             {
                 case "Monochrome":
-                    iconBorder.Background = new SolidColorBrush(MediaColor.FromArgb(30, 255, 255, 255));
-                    iconBorder.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(80, 255, 255, 255));
+                    iconBorder.Background = new SolidColorBrush(MediaColor.FromArgb(35, 255, 255, 255));
+                    iconBorder.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(110, 255, 255, 255));
                     iconBorder.BorderThickness = new Thickness(1);
                     iconTxt.Foreground = WpfBrushes.White;
                     break;
                 case "Material":
-                    iconBorder.Background = new SolidColorBrush(MediaColor.FromArgb(40, accentColor.R, accentColor.G, accentColor.B));
+                    iconBorder.Background = new SolidColorBrush(MediaColor.FromArgb(45, accentColor.R, accentColor.G, accentColor.B));
                     iconBorder.BorderBrush = new SolidColorBrush(accentColor);
-                    iconBorder.BorderThickness = new Thickness(1.2);
+                    iconBorder.BorderThickness = new Thickness(1.4);
                     iconTxt.Foreground = new SolidColorBrush(accentColor);
                     break;
                 case "Color":
-                    iconBorder.Background = new SolidColorBrush(accentColor);
+                    iconBorder.Background = new LinearGradientBrush(
+                        accentColor,
+                        MediaColor.FromRgb((byte)(accentColor.R * 0.65), (byte)(accentColor.G * 0.65), (byte)(accentColor.B * 0.65)),
+                        45.0);
+                    iconBorder.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(140, 255, 255, 255));
+                    iconBorder.BorderThickness = new Thickness(1);
                     iconTxt.Foreground = WpfBrushes.White;
                     break;
-                default: // Fluent
-                    iconBorder.Background = new SolidColorBrush(MediaColor.FromArgb(35, accentColor.R, accentColor.G, accentColor.B));
-                    iconBorder.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(90, accentColor.R, accentColor.G, accentColor.B));
+                case "SuperIcon":
+                    iconBorder.Background = new LinearGradientBrush(
+                        MediaColor.FromArgb(230, accentColor.R, accentColor.G, accentColor.B),
+                        MediaColor.FromArgb(180, 15, 23, 42),
+                        45.0);
+                    iconBorder.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(200, 255, 255, 255));
+                    iconBorder.BorderThickness = new Thickness(1.3);
+                    iconBorder.Effect = new System.Windows.Media.Effects.DropShadowEffect
+                    {
+                        Color = accentColor,
+                        BlurRadius = 10,
+                        ShadowDepth = 0,
+                        Opacity = 0.65
+                    };
+                    iconTxt.Foreground = WpfBrushes.White;
+                    break;
+                default: // Fluent & NativeExe
+                    iconBorder.Background = new SolidColorBrush(MediaColor.FromArgb(45, accentColor.R, accentColor.G, accentColor.B));
+                    iconBorder.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(120, accentColor.R, accentColor.G, accentColor.B));
                     iconBorder.BorderThickness = new Thickness(1);
                     iconTxt.Foreground = new SolidColorBrush(accentColor);
                     break;
             }
+
+            // Gerçek .exe / .lnk Windows Simgesi Varsa Göster
+            if (w.UseNativeExeIcon || w.IconType == "NativeExe")
+            {
+                var nativeImg = TryExtractAppIconImage(w.TargetPath);
+                if (nativeImg != null)
+                {
+                    var img = new System.Windows.Controls.Image
+                    {
+                        Source = nativeImg,
+                        Width = boxSize * 0.68,
+                        Height = boxSize * 0.68,
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    RenderOptions.SetBitmapScalingMode(img, BitmapScalingMode.HighQuality);
+                    iconBorder.Child = img;
+                    return iconBorder;
+                }
+            }
+
             iconBorder.Child = iconTxt;
+            return iconBorder;
+        }
+
+        public FrameworkElement BuildCustomWidgetContent(CustomAppWidget w)
+        {
+            var accentColor = ParseAccentColor(w.AccentColor);
+            bool isSolid = w.BackgroundMode == "Solid";
+            WpfBrush primaryFg = isSolid ? WpfBrushes.White : (WpfBrush)FindResource("DockForegroundBrush");
+            WpfBrush secondaryFg = isSolid
+                ? new SolidColorBrush(MediaColor.FromArgb(220, 255, 255, 255))
+                : new SolidColorBrush(accentColor);
+
+            string template = string.IsNullOrWhiteSpace(w.CardTemplate) ? "HarmonyServiceCard" : w.CardTemplate;
+
+            // 1. XIAOMI HYPEROS 3 "SUPER ICON" KARTI
+            if (template == "HyperSuperIcon")
+            {
+                var iconEl = BuildStyledIconElement(w, w.WidgetSize == "1x1" ? 34 : 32, w.WidgetSize == "1x1" ? 16 : 15);
+                iconEl.Effect = new System.Windows.Media.Effects.DropShadowEffect
+                {
+                    Color = accentColor,
+                    BlurRadius = 12,
+                    ShadowDepth = 0,
+                    Opacity = 0.7
+                };
+
+                if (w.WidgetSize == "1x1")
+                {
+                    var g = new Grid { MinWidth = 54, Margin = new Thickness(6, 2, 6, 2) };
+                    var sp = new StackPanel
+                    {
+                        Orientation = WpfOrientation.Vertical,
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    sp.Children.Add(iconEl);
+                    sp.Children.Add(new TextBlock
+                    {
+                        Text = w.Title,
+                        FontSize = 9,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = primaryFg,
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                        TextTrimming = TextTrimming.CharacterEllipsis,
+                        MaxWidth = 56,
+                        Margin = new Thickness(0, 3, 0, 0)
+                    });
+                    g.Children.Add(sp);
+
+                    if (!string.IsNullOrWhiteSpace(w.BadgeText))
+                    {
+                        var pill = new Border
+                        {
+                            Background = new SolidColorBrush(accentColor),
+                            CornerRadius = new CornerRadius(4),
+                            Padding = new Thickness(3, 0, 3, 0),
+                            HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
+                            VerticalAlignment = VerticalAlignment.Top,
+                            Child = new TextBlock { Text = w.BadgeText, FontSize = 6.5, FontWeight = FontWeights.Bold, Foreground = WpfBrushes.Black }
+                        };
+                        g.Children.Add(pill);
+                    }
+                    return g;
+                }
+                else
+                {
+                    var dp = new DockPanel
+                    {
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Margin = new Thickness(7, 2, 7, 2),
+                        MinWidth = w.WidgetSize == "1x3" ? 142 : 95
+                    };
+                    DockPanel.SetDock(iconEl, Dock.Left);
+                    dp.Children.Add(iconEl);
+
+                    var sp = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
+                    var spTop = new StackPanel { Orientation = WpfOrientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+                    spTop.Children.Add(new TextBlock
+                    {
+                        Text = w.Title,
+                        FontSize = 11,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = primaryFg,
+                        TextTrimming = TextTrimming.CharacterEllipsis,
+                        MaxWidth = w.WidgetSize == "1x3" ? 85 : 58
+                    });
+                    if (!string.IsNullOrWhiteSpace(w.BadgeText))
+                    {
+                        spTop.Children.Add(new Border
+                        {
+                            Background = new SolidColorBrush(MediaColor.FromArgb(55, accentColor.R, accentColor.G, accentColor.B)),
+                            BorderBrush = new SolidColorBrush(accentColor),
+                            BorderThickness = new Thickness(0.8),
+                            CornerRadius = new CornerRadius(4),
+                            Padding = new Thickness(3, 0, 3, 0),
+                            Margin = new Thickness(4, 0, 0, 0),
+                            Child = new TextBlock { Text = w.BadgeText, FontSize = 7, FontWeight = FontWeights.Bold, Foreground = secondaryFg }
+                        });
+                    }
+                    sp.Children.Add(spTop);
+                    sp.Children.Add(new TextBlock
+                    {
+                        Text = string.IsNullOrWhiteSpace(w.Subtitle) ? "HyperOS Süper İkon" : w.Subtitle,
+                        FontSize = 8.5,
+                        FontWeight = FontWeights.SemiBold,
+                        Foreground = secondaryFg,
+                        TextTrimming = TextTrimming.CharacterEllipsis,
+                        MaxWidth = w.WidgetSize == "1x3" ? 100 : 68,
+                        Margin = new Thickness(0, 1, 0, 0)
+                    });
+                    dp.Children.Add(sp);
+                    return dp;
+                }
+            }
+
+            // 2. HUAWEI EMUI 13 "SMART WIDGET COMBO" (ÇİFT KISAYOL GRUP KARTI)
+            if (template == "EmuiComboCard")
+            {
+                var iconEl = BuildStyledIconElement(w, 28, 13);
+                var dp = new DockPanel
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(6, 2, 6, 2),
+                    MinWidth = w.WidgetSize == "1x1" ? 62 : (w.WidgetSize == "1x3" ? 150 : 108)
+                };
+
+                // Sağdaki 2. Hızlı Eylem Kapsülü (EMUI 13 Combo)
+                var btnSub = new WpfButton
+                {
+                    Style = (Style)FindResource("DockButtonStyle"),
+                    Height = 28,
+                    Padding = new Thickness(6, 0, 6, 0),
+                    Margin = new Thickness(6, 0, 0, 0),
+                    Background = new SolidColorBrush(MediaColor.FromArgb(45, accentColor.R, accentColor.G, accentColor.B)),
+                    BorderBrush = new SolidColorBrush(MediaColor.FromArgb(110, accentColor.R, accentColor.G, accentColor.B)),
+                    BorderThickness = new Thickness(1),
+                    ToolTip = $"Kombo İkincil Eylem: {w.SecondaryTitle} ({w.SecondaryPath})"
+                };
+                var spSub = new StackPanel { Orientation = WpfOrientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+                spSub.Children.Add(new TextBlock
+                {
+                    Text = string.IsNullOrWhiteSpace(w.SecondaryIcon) ? "⚡" : w.SecondaryIcon,
+                    FontSize = 11,
+                    VerticalAlignment = VerticalAlignment.Center
+                });
+                if (w.WidgetSize == "1x3")
+                {
+                    spSub.Children.Add(new TextBlock
+                    {
+                        Text = string.IsNullOrWhiteSpace(w.SecondaryTitle) ? "Ek" : w.SecondaryTitle,
+                        FontSize = 8.5,
+                        FontWeight = FontWeights.SemiBold,
+                        Foreground = WpfBrushes.White,
+                        Margin = new Thickness(4, 0, 0, 0),
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                }
+                btnSub.Content = spSub;
+                btnSub.Click += (s, ev) =>
+                {
+                    ev.Handled = true;
+                    try
+                    {
+                        string secPath = string.IsNullOrWhiteSpace(w.SecondaryPath) ? "wt.exe" : w.SecondaryPath;
+                        Process.Start(new ProcessStartInfo { FileName = secPath, UseShellExecute = true });
+                    }
+                    catch { }
+                };
+
+                DockPanel.SetDock(btnSub, Dock.Right);
+                dp.Children.Add(btnSub);
+
+                DockPanel.SetDock(iconEl, Dock.Left);
+                dp.Children.Add(iconEl);
+
+                if (w.WidgetSize != "1x1")
+                {
+                    var spText = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
+                    spText.Children.Add(new TextBlock
+                    {
+                        Text = w.Title,
+                        FontSize = 10.5,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = primaryFg,
+                        TextTrimming = TextTrimming.CharacterEllipsis,
+                        MaxWidth = 68
+                    });
+                    spText.Children.Add(new TextBlock
+                    {
+                        Text = string.IsNullOrWhiteSpace(w.Subtitle) ? "EMUI Kombo" : w.Subtitle,
+                        FontSize = 8,
+                        Foreground = secondaryFg,
+                        TextTrimming = TextTrimming.CharacterEllipsis,
+                        MaxWidth = 68
+                    });
+                    dp.Children.Add(spText);
+                }
+
+                return dp;
+            }
+
+            // 3. HUAWEI HARMONYOS 3 "SERVICE CARD" (SERVİS KARTI & DURUM ÇUBUĞU) / LIQUID GLASS
+            var mainIcon = BuildStyledIconElement(w, w.WidgetSize == "1x1" ? 30 : 28, w.WidgetSize == "1x1" ? 14 : 13);
 
             if (w.WidgetSize == "1x1")
             {
-                // Kare görünüm (En az kare görünümünde kalsın)
-                iconBorder.Width = 32;
-                iconBorder.Height = 32;
-                iconBorder.CornerRadius = new CornerRadius(9);
-                iconTxt.FontSize = 15;
-
                 var pnl = new StackPanel
                 {
                     Orientation = WpfOrientation.Vertical,
                     VerticalAlignment = VerticalAlignment.Center,
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                    Margin = new Thickness(8, 2, 8, 2),
+                    Margin = new Thickness(7, 2, 7, 2),
                     MinWidth = 52
                 };
-                pnl.Children.Add(iconBorder);
+                pnl.Children.Add(mainIcon);
                 pnl.Children.Add(new TextBlock
                 {
                     Text = w.Title,
                     FontSize = 9,
                     FontWeight = FontWeights.SemiBold,
-                    Foreground = (WpfBrush)FindResource("DockSecondaryForegroundBrush"),
+                    Foreground = primaryFg,
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                     TextTrimming = TextTrimming.CharacterEllipsis,
                     MaxWidth = 54,
-                    Margin = new Thickness(0, 3, 0, 0)
+                    Margin = new Thickness(0, 2, 0, 1)
+                });
+                // HarmonyOS 3 Alt Servis Çizgisi (Service Snippet Indicator Bar)
+                pnl.Children.Add(new Border
+                {
+                    Width = 18,
+                    Height = 2.5,
+                    CornerRadius = new CornerRadius(1.5),
+                    Background = new SolidColorBrush(accentColor),
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center
                 });
                 return pnl;
             }
-            else if (w.WidgetSize == "1x3")
+            else
             {
-                // Genişletilmiş Kart
-                var dock = new DockPanel
+                var outerStack = new StackPanel
                 {
+                    Orientation = WpfOrientation.Vertical,
                     VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(8, 2, 8, 2),
-                    MinWidth = 130
+                    Margin = new Thickness(7, 2, 7, 2),
+                    MinWidth = w.WidgetSize == "1x3" ? 140 : 92
                 };
-                DockPanel.SetDock(iconBorder, Dock.Left);
-                dock.Children.Add(iconBorder);
 
-                var btnSettings = new WpfButton
+                var dock = new DockPanel { VerticalAlignment = VerticalAlignment.Center };
+                DockPanel.SetDock(mainIcon, Dock.Left);
+                dock.Children.Add(mainIcon);
+
+                if (w.WidgetSize == "1x3")
                 {
-                    Style = (Style)FindResource("DockButtonStyle"),
-                    Width = 22,
-                    Height = 22,
-                    Margin = new Thickness(6, 0, 0, 0),
-                    Content = new TextBlock { Text = "⚙️", FontSize = 9 },
-                    ToolTip = "Widget Ayarları"
-                };
-                btnSettings.Click += (s, e) => ShowCustomWidgetEditorDialog(w);
-                DockPanel.SetDock(btnSettings, Dock.Right);
-                dock.Children.Add(btnSettings);
+                    var pillLaunch = new Border
+                    {
+                        Width = 22,
+                        Height = 22,
+                        CornerRadius = new CornerRadius(11),
+                        Background = new SolidColorBrush(MediaColor.FromArgb(50, accentColor.R, accentColor.G, accentColor.B)),
+                        BorderBrush = new SolidColorBrush(accentColor),
+                        BorderThickness = new Thickness(1),
+                        Margin = new Thickness(6, 0, 0, 0),
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Child = new TextBlock
+                        {
+                            Text = "▶",
+                            FontSize = 8,
+                            Foreground = isSolid ? WpfBrushes.White : new SolidColorBrush(accentColor),
+                            HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                            VerticalAlignment = VerticalAlignment.Center
+                        }
+                    };
+                    DockPanel.SetDock(pillLaunch, Dock.Right);
+                    dock.Children.Add(pillLaunch);
+                }
 
                 var spText = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(7, 0, 0, 0) };
-                spText.Children.Add(new TextBlock
-                {
-                    Text = w.Title,
-                    FontSize = 11,
-                    FontWeight = FontWeights.Bold,
-                    Foreground = (WpfBrush)FindResource("DockForegroundBrush"),
-                    TextTrimming = TextTrimming.CharacterEllipsis,
-                    MaxWidth = 85
-                });
-                spText.Children.Add(new TextBlock
-                {
-                    Text = string.IsNullOrWhiteSpace(w.Subtitle) ? "Özel Uygulama" : w.Subtitle,
-                    FontSize = 9,
-                    Foreground = new SolidColorBrush(accentColor),
-                    TextTrimming = TextTrimming.CharacterEllipsis,
-                    MaxWidth = 85
-                });
-                dock.Children.Add(spText);
-                return dock;
-            }
-            else // 1x2 Standart
-            {
-                var dock = new DockPanel
-                {
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(6, 2, 6, 2),
-                    MinWidth = 80
-                };
-                DockPanel.SetDock(iconBorder, Dock.Left);
-                dock.Children.Add(iconBorder);
 
-                var spText = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
-                spText.Children.Add(new TextBlock
+                // Üst Durum Noktası + Başlık
+                var spHeader = new StackPanel { Orientation = WpfOrientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+                spHeader.Children.Add(new Border
+                {
+                    Width = 5,
+                    Height = 5,
+                    CornerRadius = new CornerRadius(2.5),
+                    Background = new SolidColorBrush(isSolid ? MediaColor.FromRgb(52, 211, 153) : accentColor),
+                    Margin = new Thickness(0, 0, 4, 0),
+                    VerticalAlignment = VerticalAlignment.Center
+                });
+                spHeader.Children.Add(new TextBlock
                 {
                     Text = w.Title,
                     FontSize = 11,
                     FontWeight = FontWeights.Bold,
-                    Foreground = (WpfBrush)FindResource("DockForegroundBrush"),
+                    Foreground = primaryFg,
                     TextTrimming = TextTrimming.CharacterEllipsis,
-                    MaxWidth = 65
+                    MaxWidth = w.WidgetSize == "1x3" ? 82 : 62
                 });
+                spText.Children.Add(spHeader);
+
                 spText.Children.Add(new TextBlock
                 {
-                    Text = string.IsNullOrWhiteSpace(w.Subtitle) ? "BAŞLAT" : w.Subtitle,
-                    FontSize = 8,
+                    Text = string.IsNullOrWhiteSpace(w.Subtitle) ? "Servis Kartı" : w.Subtitle,
+                    FontSize = 8.5,
                     FontWeight = FontWeights.SemiBold,
-                    Foreground = new SolidColorBrush(accentColor),
+                    Foreground = secondaryFg,
                     TextTrimming = TextTrimming.CharacterEllipsis,
-                    MaxWidth = 65
+                    MaxWidth = w.WidgetSize == "1x3" ? 90 : 66,
+                    Margin = new Thickness(0, 1, 0, 0)
                 });
+
                 dock.Children.Add(spText);
-                return dock;
+                outerStack.Children.Add(dock);
+
+                // HarmonyOS 3 Alt Servis Kapsül Çizgisi
+                outerStack.Children.Add(new Border
+                {
+                    Width = 24,
+                    Height = 2.5,
+                    CornerRadius = new CornerRadius(1.5),
+                    Background = new SolidColorBrush(MediaColor.FromArgb(170, accentColor.R, accentColor.G, accentColor.B)),
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 3, 0, 0)
+                });
+
+                return outerStack;
             }
         }
 
@@ -1204,9 +1818,12 @@ namespace OxiDock
                     return;
                 }
 
+                string target = Environment.ExpandEnvironmentVariables(widget.TargetPath.Trim());
+                string? resolved = ResolveExecutablePath(target);
+
                 var psi = new ProcessStartInfo
                 {
-                    FileName = widget.TargetPath,
+                    FileName = resolved ?? target,
                     Arguments = widget.Arguments,
                     UseShellExecute = true
                 };
@@ -1214,7 +1831,15 @@ namespace OxiDock
             }
             catch (Exception ex)
             {
-                Forms.MessageBox.Show($"'{widget.Title}' başlatılamadı:\n{ex.Message}\n\nLütfen ayarlar butonuna basarak dosya yolunu düzenleyin.", "OxiDock Uygulama Widget", Forms.MessageBoxButtons.OK, Forms.MessageBoxIcon.Warning);
+                var res = Forms.MessageBox.Show(
+                    $"'{widget.Title}' başlatılamadı:\n{ex.Message}\n\nŞimdi Widget Stüdyosunu açıp dosya yolunu düzenlemek ister misiniz?",
+                    "OxiDock Widget Başlatıcı",
+                    Forms.MessageBoxButtons.YesNo,
+                    Forms.MessageBoxIcon.Warning);
+                if (res == Forms.DialogResult.Yes)
+                {
+                    ShowCustomWidgetEditorDialog(widget);
+                }
             }
         }
 
@@ -1223,52 +1848,424 @@ namespace OxiDock
             var isNew = (widgetToEdit == null);
             var widget = widgetToEdit ?? new CustomAppWidget
             {
-                Title = "Word",
-                Subtitle = "Belge Düzenleyici",
+                Title = "VS Code",
+                Subtitle = "Kod & Geliştirme",
                 IconType = "Fluent",
-                IconValue = "W",
-                AccentColor = "#2563EB",
-                TargetPath = "winword.exe"
+                IconValue = "💻",
+                AccentColor = "#38BDF8",
+                TargetPath = "code.cmd",
+                WidgetSize = "1x2",
+                CardTemplate = "HarmonyServiceCard",
+                BackgroundMode = "Glass",
+                BadgeText = "SERVİS",
+                UseNativeExeIcon = true,
+                CornerStyle = "Squircle",
+                SecondaryTitle = "Terminal",
+                SecondaryIcon = "⚡",
+                SecondaryPath = "wt.exe"
+            };
+
+            // Önizleme için geçici çalışma kopyası
+            var draft = new CustomAppWidget
+            {
+                Id = widget.Id,
+                Title = widget.Title,
+                Subtitle = widget.Subtitle,
+                TargetPath = widget.TargetPath,
+                Arguments = widget.Arguments,
+                IconType = widget.IconType,
+                IconValue = widget.IconValue,
+                AccentColor = widget.AccentColor,
+                WidgetSize = widget.WidgetSize,
+                IsEnabled = widget.IsEnabled,
+                CardTemplate = string.IsNullOrWhiteSpace(widget.CardTemplate) ? "HarmonyServiceCard" : widget.CardTemplate,
+                BackgroundMode = string.IsNullOrWhiteSpace(widget.BackgroundMode) ? "Glass" : widget.BackgroundMode,
+                BadgeText = widget.BadgeText ?? "SERVİS",
+                UseNativeExeIcon = widget.UseNativeExeIcon,
+                CornerStyle = string.IsNullOrWhiteSpace(widget.CornerStyle) ? "Squircle" : widget.CornerStyle,
+                SecondaryTitle = widget.SecondaryTitle ?? "Terminal",
+                SecondaryIcon = widget.SecondaryIcon ?? "⚡",
+                SecondaryPath = widget.SecondaryPath ?? "wt.exe"
             };
 
             var dlg = new Window
             {
-                Title = isNew ? "OxiDock • Yeni Uygulama Widget'ı Oluştur" : $"OxiDock • '{widget.Title}' Widget Ayarları",
-                Width = 460,
-                Height = 520,
+                Title = isNew ? "OxiDock • HarmonyOS 3 / HyperOS 3 / EMUI 13 Widget Stüdyosu" : $"OxiDock • '{widget.Title}' Widget Stüdyosu",
+                Width = 680,
+                Height = 760,
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                Background = new SolidColorBrush(MediaColor.FromRgb(20, 20, 28)),
+                Background = new SolidColorBrush(MediaColor.FromRgb(13, 17, 26)),
                 Foreground = WpfBrushes.White,
                 Topmost = true,
-                ResizeMode = ResizeMode.NoResize
+                ResizeMode = ResizeMode.CanResize
             };
 
-            var sp = new StackPanel { Margin = new Thickness(18) };
+            var rootScroll = new ScrollViewer
+            {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+            };
+            var sp = new StackPanel { Margin = new Thickness(20, 16, 20, 20) };
 
+            // Başlık & Alt Bilgi
             sp.Children.Add(new TextBlock
             {
-                Text = isNew ? "✨ Yeni Uygulama Widget'ı Oluştur" : $"⚙️ '{widget.Title}' Widget'ını Düzenle",
+                Text = isNew ? "✨ OxiDock Görsel Widget Stüdyosu (HarmonyOS 3 • HyperOS 3 • EMUI 13)" : $"🎨 '{widget.Title}' Widget'ını Özelleştir veya Kaldır",
                 FontWeight = FontWeights.Bold,
-                FontSize = 15,
-                Foreground = new SolidColorBrush(MediaColor.FromRgb(56, 189, 248)),
-                Margin = new Thickness(0, 0, 0, 12)
+                FontSize = 16,
+                Foreground = new SolidColorBrush(MediaColor.FromRgb(56, 189, 248))
+            });
+            sp.Children.Add(new TextBlock
+            {
+                Text = "Kart şablonunu, renk paletini, ikon tasarımını ve Android boyutunu seçin; üstteki canlı sahnede anında önizleyin.",
+                FontSize = 11,
+                Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)),
+                Margin = new Thickness(0, 2, 0, 12)
             });
 
-            // Başlık
-            sp.Children.Add(new TextBlock { Text = "Widget Başlığı (Örn: Word, Excel, VS Code):", FontSize = 11, Foreground = new SolidColorBrush(MediaColor.FromArgb(190, 255, 255, 255)) });
-            var txtTitle = new TextBox { Text = widget.Title, Margin = new Thickness(0, 3, 0, 8), Background = new SolidColorBrush(MediaColor.FromRgb(30, 30, 40)), Foreground = WpfBrushes.White, Padding = new Thickness(6, 4, 6, 4) };
-            sp.Children.Add(txtTitle);
+            // 1. CANLI GÖRSEL DOCK ÖNİZLEME SAHNESİ (LIVE PREVIEW STAGE)
+            var previewStageBorder = new Border
+            {
+                Background = new LinearGradientBrush(
+                    MediaColor.FromRgb(18, 24, 38),
+                    MediaColor.FromRgb(10, 14, 22),
+                    90.0),
+                BorderBrush = new SolidColorBrush(MediaColor.FromArgb(90, 56, 189, 248)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(14),
+                Padding = new Thickness(14, 10, 14, 10),
+                Margin = new Thickness(0, 0, 0, 12)
+            };
+            var dpStage = new DockPanel();
+            var spStageInfo = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            spStageInfo.Children.Add(new TextBlock
+            {
+                Text = "👁️ CANLI DOCK ÖNİZLEMESİ",
+                FontSize = 10,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(MediaColor.FromRgb(56, 189, 248))
+            });
+            var txtStageMeta = new TextBlock
+            {
+                Text = "HarmonyOS 3 Servis Kartı • 1x2 • Buzlu Cam",
+                FontSize = 10,
+                Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)),
+                Margin = new Thickness(0, 2, 0, 0)
+            };
+            spStageInfo.Children.Add(txtStageMeta);
+            DockPanel.SetDock(spStageInfo, Dock.Left);
+            dpStage.Children.Add(spStageInfo);
 
-            // Alt Başlık / Açıklama
-            sp.Children.Add(new TextBlock { Text = "Alt Başlık / Bilgi (Örn: Tablolar, Kod Editörü, AÇ):", FontSize = 11, Foreground = new SolidColorBrush(MediaColor.FromArgb(190, 255, 255, 255)) });
-            var txtSubtitle = new TextBox { Text = widget.Subtitle, Margin = new Thickness(0, 3, 0, 8), Background = new SolidColorBrush(MediaColor.FromRgb(30, 30, 40)), Foreground = WpfBrushes.White, Padding = new Thickness(6, 4, 6, 4) };
-            sp.Children.Add(txtSubtitle);
+            var previewHolder = new Border
+            {
+                Background = new SolidColorBrush(MediaColor.FromArgb(160, 8, 11, 18)),
+                BorderBrush = new SolidColorBrush(MediaColor.FromArgb(45, 255, 255, 255)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(16),
+                Padding = new Thickness(14, 8, 14, 8),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            dpStage.Children.Add(previewHolder);
+            previewStageBorder.Child = dpStage;
+            sp.Children.Add(previewStageBorder);
 
-            // Hedef Yol ve Gözat
-            sp.Children.Add(new TextBlock { Text = "Çalıştırılacak Dosya (.exe, .lnk, .bat) veya Web Linki:", FontSize = 11, Foreground = new SolidColorBrush(MediaColor.FromArgb(190, 255, 255, 255)) });
-            var dpPath = new DockPanel { Margin = new Thickness(0, 3, 0, 8) };
-            var btnBrowse = new WpfButton { Content = "Gözat...", Width = 70, Margin = new Thickness(6, 0, 0, 0) };
-            var txtPath = new TextBox { Text = widget.TargetPath, Background = new SolidColorBrush(MediaColor.FromRgb(30, 30, 40)), Foreground = WpfBrushes.White, Padding = new Thickness(6, 4, 6, 4) };
+            // Kontrollerin İleri Tanımları
+            var txtTitle = new TextBox { Text = draft.Title, Background = new SolidColorBrush(MediaColor.FromRgb(24, 30, 44)), Foreground = WpfBrushes.White, Padding = new Thickness(7, 5, 7, 5), BorderBrush = new SolidColorBrush(MediaColor.FromArgb(60, 255, 255, 255)) };
+            var txtSubtitle = new TextBox { Text = draft.Subtitle, Background = new SolidColorBrush(MediaColor.FromRgb(24, 30, 44)), Foreground = WpfBrushes.White, Padding = new Thickness(7, 5, 7, 5), BorderBrush = new SolidColorBrush(MediaColor.FromArgb(60, 255, 255, 255)) };
+            var txtBadge = new TextBox { Text = draft.BadgeText, Background = new SolidColorBrush(MediaColor.FromRgb(24, 30, 44)), Foreground = WpfBrushes.White, Padding = new Thickness(7, 5, 7, 5), BorderBrush = new SolidColorBrush(MediaColor.FromArgb(60, 255, 255, 255)) };
+            var txtPath = new TextBox { Text = draft.TargetPath, Background = new SolidColorBrush(MediaColor.FromRgb(24, 30, 44)), Foreground = WpfBrushes.White, Padding = new Thickness(7, 5, 7, 5), BorderBrush = new SolidColorBrush(MediaColor.FromArgb(60, 255, 255, 255)) };
+            var txtIcon = new TextBox { Text = draft.IconValue, Background = new SolidColorBrush(MediaColor.FromRgb(24, 30, 44)), Foreground = WpfBrushes.White, Padding = new Thickness(7, 5, 7, 5), BorderBrush = new SolidColorBrush(MediaColor.FromArgb(60, 255, 255, 255)) };
+            var txtColor = new TextBox { Text = draft.AccentColor, Width = 86, Background = new SolidColorBrush(MediaColor.FromRgb(24, 30, 44)), Foreground = WpfBrushes.White, Padding = new Thickness(7, 5, 7, 5), BorderBrush = new SolidColorBrush(MediaColor.FromArgb(60, 255, 255, 255)) };
+            var chkNativeIcon = new System.Windows.Controls.CheckBox
+            {
+                Content = "Gerçek Windows Uygulama Simgesini (.exe/.lnk) Otomatik Çek",
+                IsChecked = draft.UseNativeExeIcon,
+                Foreground = new SolidColorBrush(MediaColor.FromRgb(226, 232, 240)),
+                FontSize = 11,
+                Margin = new Thickness(0, 4, 0, 8)
+            };
+            var txtSecTitle = new TextBox { Text = draft.SecondaryTitle, Background = new SolidColorBrush(MediaColor.FromRgb(24, 30, 44)), Foreground = WpfBrushes.White, Padding = new Thickness(6, 4, 6, 4) };
+            var txtSecIcon = new TextBox { Text = draft.SecondaryIcon, Background = new SolidColorBrush(MediaColor.FromRgb(24, 30, 44)), Foreground = WpfBrushes.White, Padding = new Thickness(6, 4, 6, 4) };
+            var txtSecPath = new TextBox { Text = draft.SecondaryPath, Background = new SolidColorBrush(MediaColor.FromRgb(24, 30, 44)), Foreground = WpfBrushes.White, Padding = new Thickness(6, 4, 6, 4) };
+            var bdComboSection = new Border
+            {
+                Background = new SolidColorBrush(MediaColor.FromArgb(35, 249, 115, 22)),
+                BorderBrush = new SolidColorBrush(MediaColor.FromArgb(100, 249, 115, 22)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(10, 8, 10, 8),
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            var iconPreviewGallery = new WrapPanel { Margin = new Thickness(0, 4, 0, 10) };
+
+            void RefreshLivePreview()
+            {
+                draft.Title = string.IsNullOrWhiteSpace(txtTitle.Text) ? "Uygulama" : txtTitle.Text.Trim();
+                draft.Subtitle = txtSubtitle.Text.Trim();
+                draft.BadgeText = txtBadge.Text.Trim();
+                draft.TargetPath = txtPath.Text.Trim();
+                draft.IconValue = string.IsNullOrWhiteSpace(txtIcon.Text) ? "📄" : txtIcon.Text.Trim();
+                draft.AccentColor = string.IsNullOrWhiteSpace(txtColor.Text) ? "#38BDF8" : txtColor.Text.Trim();
+                draft.UseNativeExeIcon = chkNativeIcon.IsChecked == true;
+                draft.SecondaryTitle = txtSecTitle.Text.Trim();
+                draft.SecondaryIcon = txtSecIcon.Text.Trim();
+                draft.SecondaryPath = txtSecPath.Text.Trim();
+
+                bdComboSection.Visibility = draft.CardTemplate == "EmuiComboCard" ? Visibility.Visible : Visibility.Collapsed;
+                previewHolder.Child = BuildCustomWidgetPreviewCard(draft);
+                txtStageMeta.Text = $"{draft.CardTemplate} • Boyut: {draft.WidgetSize} • Yüzey: {draft.BackgroundMode} • İkon: {draft.IconType}";
+
+                // İkon Tasarımları Canlı Önizleme Kartlarını Güncelle
+                iconPreviewGallery.Children.Clear();
+                var iconStyles = new (string Key, string Label, bool UseNative)[]
+                {
+                    ("NativeExe", "Gerçek (.exe)", true),
+                    ("SuperIcon", "HyperOS 3B", false),
+                    ("Fluent", "Fluent Cam", false),
+                    ("Material", "Material", false),
+                    ("Color", "Tam Dolgu", false),
+                    ("Monochrome", "Monokrom", false),
+                    ("Emoji", "Emoji/Harf", false)
+                };
+                foreach (var st in iconStyles)
+                {
+                    bool isSelected = (st.Key == "NativeExe" && draft.UseNativeExeIcon) || (!draft.UseNativeExeIcon && draft.IconType == st.Key);
+                    var sample = new CustomAppWidget
+                    {
+                        TargetPath = draft.TargetPath,
+                        IconValue = draft.IconValue,
+                        AccentColor = draft.AccentColor,
+                        IconType = st.Key == "NativeExe" ? "Fluent" : st.Key,
+                        UseNativeExeIcon = st.UseNative,
+                        CardTemplate = st.Key == "SuperIcon" ? "HyperSuperIcon" : draft.CardTemplate
+                    };
+
+                    var card = new Border
+                    {
+                        Width = 78,
+                        Height = 62,
+                        CornerRadius = new CornerRadius(10),
+                        Margin = new Thickness(0, 0, 6, 6),
+                        Cursor = WpfCursors.Hand,
+                        Background = isSelected
+                            ? new SolidColorBrush(MediaColor.FromArgb(55, 56, 189, 248))
+                            : new SolidColorBrush(MediaColor.FromArgb(22, 255, 255, 255)),
+                        BorderBrush = isSelected
+                            ? new SolidColorBrush(MediaColor.FromRgb(56, 189, 248))
+                            : new SolidColorBrush(MediaColor.FromArgb(40, 255, 255, 255)),
+                        BorderThickness = new Thickness(isSelected ? 1.6 : 1)
+                    };
+                    var spCard = new StackPanel { VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = System.Windows.HorizontalAlignment.Center };
+                    spCard.Children.Add(BuildStyledIconElement(sample, 28, 13));
+                    spCard.Children.Add(new TextBlock
+                    {
+                        Text = st.Label,
+                        FontSize = 8.5,
+                        FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal,
+                        Foreground = isSelected ? new SolidColorBrush(MediaColor.FromRgb(56, 189, 248)) : new SolidColorBrush(MediaColor.FromRgb(203, 213, 225)),
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                        Margin = new Thickness(0, 4, 0, 0)
+                    });
+                    card.Child = spCard;
+                    string capturedKey = st.Key;
+                    bool capturedNative = st.UseNative;
+                    card.MouseLeftButtonDown += (s, ev) =>
+                    {
+                        chkNativeIcon.IsChecked = capturedNative;
+                        if (capturedKey != "NativeExe") draft.IconType = capturedKey;
+                        RefreshLivePreview();
+                    };
+                    iconPreviewGallery.Children.Add(card);
+                }
+            }
+
+            // 2. HARMONYOS 3 / HYPEROS 3 / EMUI 13 KART ŞABLONU SEÇİCİ
+            sp.Children.Add(new TextBlock { Text = "1. Ekosistem Kart Tasarımı (HarmonyOS 3 • HyperOS 3 • EMUI 13):", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(226, 232, 240)) });
+            var wpTemplates = new WrapPanel { Margin = new Thickness(0, 4, 0, 10) };
+            var templateOptions = new (string Key, string Title, string Sub, string ColorHex)[]
+            {
+                ("HarmonyServiceCard", "🟢 HarmonyOS 3 Servis", "Kapsül & Durum Çubuğu", "#10B981"),
+                ("HyperSuperIcon", "🔵 HyperOS 3 Süper İkon", "3B Parlama & Rozet", "#38BDF8"),
+                ("EmuiComboCard", "🟠 EMUI 13 Akıllı Kombo", "Çift Uygulama Grubu", "#F97316"),
+                ("LiquidGlassCard", "🌊 OxiDock Liquid Glass", "Akıcı Neon Cam", "#8B5CF6")
+            };
+            foreach (var tpl in templateOptions)
+            {
+                var btnTpl = new WpfButton
+                {
+                    Padding = new Thickness(10, 6, 10, 6),
+                    Margin = new Thickness(0, 0, 6, 6),
+                    Background = new SolidColorBrush(MediaColor.FromArgb(30, 255, 255, 255)),
+                    Foreground = WpfBrushes.White,
+                    BorderBrush = new SolidColorBrush(ParseAccentColor(tpl.ColorHex)),
+                    BorderThickness = new Thickness(1),
+                    Cursor = WpfCursors.Hand
+                };
+                var spTpl = new StackPanel();
+                spTpl.Children.Add(new TextBlock { Text = tpl.Title, FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = WpfBrushes.White });
+                spTpl.Children.Add(new TextBlock { Text = tpl.Sub, FontSize = 8.5, Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)) });
+                btnTpl.Content = spTpl;
+                string capturedTpl = tpl.Key;
+                btnTpl.Click += (s, ev) =>
+                {
+                    draft.CardTemplate = capturedTpl;
+                    RefreshLivePreview();
+                };
+                wpTemplates.Children.Add(btnTpl);
+            }
+            sp.Children.Add(wpTemplates);
+
+            // 3. BOYUT (1x1 / 1x2 / 1x3) & YÜZEY MODU (GLASS / GRADIENT / SOLID / OUTLINE)
+            var gridSizeSurface = new Grid { Margin = new Thickness(0, 0, 0, 10) };
+            gridSizeSurface.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            gridSizeSurface.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });
+
+            var spSizes = new StackPanel { Margin = new Thickness(0, 0, 8, 0) };
+            spSizes.Children.Add(new TextBlock { Text = "2. Android Widget Boyutu:", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(226, 232, 240)), Margin = new Thickness(0, 0, 0, 4) });
+            var wpSizes = new WrapPanel();
+            foreach (var sz in new[] { ("1x1", "1x1 Kare"), ("1x2", "1x2 Standart"), ("1x3", "1x3 Geniş") })
+            {
+                var bSz = new WpfButton
+                {
+                    Content = sz.Item2,
+                    Padding = new Thickness(10, 5, 10, 5),
+                    Margin = new Thickness(0, 0, 5, 4),
+                    Background = new SolidColorBrush(MediaColor.FromArgb(35, 56, 189, 248)),
+                    Foreground = WpfBrushes.White,
+                    FontSize = 10,
+                    FontWeight = FontWeights.SemiBold,
+                    Cursor = WpfCursors.Hand
+                };
+                string capturedSz = sz.Item1;
+                bSz.Click += (s, ev) => { draft.WidgetSize = capturedSz; RefreshLivePreview(); };
+                wpSizes.Children.Add(bSz);
+            }
+            spSizes.Children.Add(wpSizes);
+            Grid.SetColumn(spSizes, 0);
+            gridSizeSurface.Children.Add(spSizes);
+
+            var spSurfaces = new StackPanel { Margin = new Thickness(8, 0, 0, 0) };
+            spSurfaces.Children.Add(new TextBlock { Text = "3. Kart Yüzey Görünümü:", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(226, 232, 240)), Margin = new Thickness(0, 0, 0, 4) });
+            var wpSurfaces = new WrapPanel();
+            foreach (var sf in new[] { ("Glass", "🪟 Buzlu Cam"), ("Gradient", "🌈 Gradyan"), ("Solid", "🎨 Tam Dolgu"), ("Outline", "⚡ Neon Çizgi") })
+            {
+                var bSf = new WpfButton
+                {
+                    Content = sf.Item2,
+                    Padding = new Thickness(9, 5, 9, 5),
+                    Margin = new Thickness(0, 0, 5, 4),
+                    Background = new SolidColorBrush(MediaColor.FromArgb(30, 255, 255, 255)),
+                    Foreground = WpfBrushes.White,
+                    FontSize = 10,
+                    Cursor = WpfCursors.Hand
+                };
+                string capturedSf = sf.Item1;
+                bSf.Click += (s, ev) => { draft.BackgroundMode = capturedSf; RefreshLivePreview(); };
+                wpSurfaces.Children.Add(bSf);
+            }
+            spSurfaces.Children.Add(wpSurfaces);
+            Grid.SetColumn(spSurfaces, 1);
+            gridSizeSurface.Children.Add(spSurfaces);
+            sp.Children.Add(gridSizeSurface);
+
+            // 4. CANLI RENK PALETİ (COLOR SWATCHES)
+            sp.Children.Add(new TextBlock { Text = "4. Vurgu Renk Paleti (Tek Tıkla Seçin veya Özel Hex Girin):", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(226, 232, 240)), Margin = new Thickness(0, 0, 0, 4) });
+            var dpPalette = new DockPanel { Margin = new Thickness(0, 0, 0, 10) };
+            DockPanel.SetDock(txtColor, Dock.Right);
+            dpPalette.Children.Add(txtColor);
+
+            var wpSwatches = new WrapPanel { VerticalAlignment = VerticalAlignment.Center };
+            var paletteColors = new (string Hex, string Name)[]
+            {
+                ("#38BDF8", "HyperOS Mavi"),
+                ("#2563EB", "Kraliyet Mavisi"),
+                ("#10B981", "Harmony Zümrüt"),
+                ("#22C55E", "Spotify Yeşil"),
+                ("#F97316", "EMUI Turuncu"),
+                ("#EAB308", "Altın Sarısı"),
+                ("#EF4444", "Mercan Kırmızı"),
+                ("#EC4899", "Neon Pembe"),
+                ("#8B5CF6", "Siber Mor"),
+                ("#06B6D4", "Turkuaz Cam"),
+                ("#6366F1", "İndigo"),
+                ("#F43F5E", "Yakut")
+            };
+            foreach (var sw in paletteColors)
+            {
+                var swBorder = new Border
+                {
+                    Width = 26,
+                    Height = 26,
+                    CornerRadius = new CornerRadius(13),
+                    Background = new SolidColorBrush(ParseAccentColor(sw.Hex)),
+                    BorderBrush = new SolidColorBrush(MediaColor.FromArgb(180, 255, 255, 255)),
+                    BorderThickness = new Thickness(1.5),
+                    Margin = new Thickness(0, 0, 7, 4),
+                    Cursor = WpfCursors.Hand,
+                    ToolTip = $"{sw.Name} ({sw.Hex})"
+                };
+                string capturedHex = sw.Hex;
+                swBorder.MouseLeftButtonDown += (s, ev) =>
+                {
+                    txtColor.Text = capturedHex;
+                    RefreshLivePreview();
+                };
+                wpSwatches.Children.Add(swBorder);
+            }
+            dpPalette.Children.Add(wpSwatches);
+            sp.Children.Add(dpPalette);
+
+            // 5. İKON TASARIMI CANLI ÖNİZLEME GALERİSİ
+            sp.Children.Add(new TextBlock { Text = "5. İkon Tasarım Stili (Canlı Önizlemeli Kartlar):", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(226, 232, 240)) });
+            sp.Children.Add(iconPreviewGallery);
+
+            // 6. BAŞLIK, ALT BAŞLIK, ROZET VE İKON KARAKTERİ
+            var gridTexts = new Grid { Margin = new Thickness(0, 0, 0, 8) };
+            gridTexts.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });
+            gridTexts.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });
+            gridTexts.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.8, GridUnitType.Star) });
+            gridTexts.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
+
+            var spT1 = new StackPanel { Margin = new Thickness(0, 0, 6, 0) };
+            spT1.Children.Add(new TextBlock { Text = "Başlık:", FontSize = 10.5, Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 2) });
+            spT1.Children.Add(txtTitle);
+            Grid.SetColumn(spT1, 0);
+            gridTexts.Children.Add(spT1);
+
+            var spT2 = new StackPanel { Margin = new Thickness(0, 0, 6, 0) };
+            spT2.Children.Add(new TextBlock { Text = "Alt Başlık / Durum:", FontSize = 10.5, Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 2) });
+            spT2.Children.Add(txtSubtitle);
+            Grid.SetColumn(spT2, 1);
+            gridTexts.Children.Add(spT2);
+
+            var spT3 = new StackPanel { Margin = new Thickness(0, 0, 6, 0) };
+            spT3.Children.Add(new TextBlock { Text = "Üst Etiket (Rozet):", FontSize = 10.5, Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 2) });
+            spT3.Children.Add(txtBadge);
+            Grid.SetColumn(spT3, 2);
+            gridTexts.Children.Add(spT3);
+
+            var spT4 = new StackPanel();
+            spT4.Children.Add(new TextBlock { Text = "Simge / Harf:", FontSize = 10.5, Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 2) });
+            spT4.Children.Add(txtIcon);
+            Grid.SetColumn(spT4, 3);
+            gridTexts.Children.Add(spT4);
+
+            sp.Children.Add(gridTexts);
+
+            // 7. HEDEF UYGULAMA YOLU (.EXE / .LNK / URL)
+            sp.Children.Add(new TextBlock { Text = "Çalıştırılacak Uygulama (.exe, .lnk, .bat) veya Web Adresi:", FontSize = 10.5, Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 2) });
+            var dpPath = new DockPanel { Margin = new Thickness(0, 0, 0, 4) };
+            var btnBrowse = new WpfButton
+            {
+                Content = "📂 Gözat...",
+                Width = 85,
+                Margin = new Thickness(6, 0, 0, 0),
+                Background = new SolidColorBrush(MediaColor.FromArgb(40, 56, 189, 248)),
+                Foreground = WpfBrushes.White,
+                Cursor = WpfCursors.Hand
+            };
             btnBrowse.Click += (s, e) =>
             {
                 var ofd = new Forms.OpenFileDialog
@@ -1279,94 +2276,50 @@ namespace OxiDock
                 if (ofd.ShowDialog() == Forms.DialogResult.OK)
                 {
                     txtPath.Text = ofd.FileName;
-                    if (string.IsNullOrWhiteSpace(txtTitle.Text))
-                    {
-                        txtTitle.Text = Path.GetFileNameWithoutExtension(ofd.FileName);
-                    }
+                    txtTitle.Text = Path.GetFileNameWithoutExtension(ofd.FileName);
+                    chkNativeIcon.IsChecked = true;
+                    RefreshLivePreview();
                 }
             };
             DockPanel.SetDock(btnBrowse, Dock.Right);
             dpPath.Children.Add(btnBrowse);
             dpPath.Children.Add(txtPath);
             sp.Children.Add(dpPath);
+            sp.Children.Add(chkNativeIcon);
 
-            // İkon Tasarım Stili ve Değeri
-            var gridIcon = new Grid { Margin = new Thickness(0, 0, 0, 8) };
-            gridIcon.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            gridIcon.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            // EMUI 13 Kombo Kart 2. Eylem Bölümü
+            var spComboInner = new StackPanel();
+            spComboInner.Children.Add(new TextBlock { Text = "🟠 EMUI 13 Akıllı Kombo — İkincil Hızlı Eylem:", FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(251, 146, 60)), Margin = new Thickness(0, 0, 0, 4) });
+            var gridCombo = new Grid();
+            gridCombo.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            gridCombo.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.6, GridUnitType.Star) });
+            gridCombo.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.6, GridUnitType.Star) });
+            Grid.SetColumn(txtSecTitle, 0);
+            txtSecIcon.Margin = new Thickness(6, 0, 6, 0);
+            Grid.SetColumn(txtSecIcon, 1);
+            Grid.SetColumn(txtSecPath, 2);
+            gridCombo.Children.Add(txtSecTitle);
+            gridCombo.Children.Add(txtSecIcon);
+            gridCombo.Children.Add(txtSecPath);
+            spComboInner.Children.Add(gridCombo);
+            bdComboSection.Child = spComboInner;
+            sp.Children.Add(bdComboSection);
 
-            var spStyle = new StackPanel { Margin = new Thickness(0, 0, 6, 0) };
-            spStyle.Children.Add(new TextBlock { Text = "İkon Tasarım Stili:", FontSize = 11, Foreground = new SolidColorBrush(MediaColor.FromArgb(190, 255, 255, 255)) });
-            var cbIconStyle = new WpfComboBox { Margin = new Thickness(0, 3, 0, 0) };
-            cbIconStyle.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = "Fluent Modern İkon", Tag = "Fluent" });
-            cbIconStyle.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = "Siyah - Beyaz (Monochrome)", Tag = "Monochrome" });
-            cbIconStyle.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = "Google Material İkon", Tag = "Material" });
-            cbIconStyle.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = "Renkli Vurgulu İkon", Tag = "Color" });
-            cbIconStyle.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = "Emoji Stili", Tag = "Emoji" });
-            cbIconStyle.SelectedIndex = widget.IconType switch
-            {
-                "Monochrome" => 1,
-                "Material" => 2,
-                "Color" => 3,
-                "Emoji" => 4,
-                _ => 0
-            };
-            spStyle.Children.Add(cbIconStyle);
-            Grid.SetColumn(spStyle, 0);
-            gridIcon.Children.Add(spStyle);
-
-            var spIconVal = new StackPanel { Margin = new Thickness(6, 0, 0, 0) };
-            spIconVal.Children.Add(new TextBlock { Text = "İkon Karakteri / Emoji:", FontSize = 11, Foreground = new SolidColorBrush(MediaColor.FromArgb(190, 255, 255, 255)) });
-            var txtIcon = new TextBox { Text = widget.IconValue, Margin = new Thickness(0, 3, 0, 0), Background = new SolidColorBrush(MediaColor.FromRgb(30, 30, 40)), Foreground = WpfBrushes.White, Padding = new Thickness(6, 4, 6, 4) };
-            spIconVal.Children.Add(txtIcon);
-            Grid.SetColumn(spIconVal, 1);
-            gridIcon.Children.Add(spIconVal);
-
-            sp.Children.Add(gridIcon);
-
-            // Renk Vurgusu ve Boyut
-            var gridColorSize = new Grid { Margin = new Thickness(0, 0, 0, 14) };
-            gridColorSize.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            gridColorSize.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-            var spColor = new StackPanel { Margin = new Thickness(0, 0, 6, 0) };
-            spColor.Children.Add(new TextBlock { Text = "Vurgulayıcı Renk (Hex):", FontSize = 11, Foreground = new SolidColorBrush(MediaColor.FromArgb(190, 255, 255, 255)) });
-            var txtColor = new TextBox { Text = widget.AccentColor, Margin = new Thickness(0, 3, 0, 0), Background = new SolidColorBrush(MediaColor.FromRgb(30, 30, 40)), Foreground = WpfBrushes.White, Padding = new Thickness(6, 4, 6, 4) };
-            spColor.Children.Add(txtColor);
-            Grid.SetColumn(spColor, 0);
-            gridColorSize.Children.Add(spColor);
-
-            var spSize = new StackPanel { Margin = new Thickness(6, 0, 0, 0) };
-            spSize.Children.Add(new TextBlock { Text = "Widget Boyutu:", FontSize = 11, Foreground = new SolidColorBrush(MediaColor.FromArgb(190, 255, 255, 255)) });
-            var cbSize = new WpfComboBox { Margin = new Thickness(0, 3, 0, 0) };
-            cbSize.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = "1x1 Kare Kompakt", Tag = "1x1" });
-            cbSize.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = "1x2 Standart Kart", Tag = "1x2" });
-            cbSize.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = "1x3 Genişletilmiş Kart", Tag = "1x3" });
-            cbSize.SelectedIndex = widget.WidgetSize switch
-            {
-                "1x2" => 1,
-                "1x3" => 2,
-                _ => 0
-            };
-            spSize.Children.Add(cbSize);
-            Grid.SetColumn(spSize, 1);
-            gridColorSize.Children.Add(spSize);
-
-            sp.Children.Add(gridColorSize);
-
-            // Hızlı Şablonlar (Word, Excel, VS Code, Spotify, Discord)
-            var spPresets = new StackPanel { Margin = new Thickness(0, 0, 0, 14) };
-            spPresets.Children.Add(new TextBlock { Text = "⚡ Hızlı Uygulama Şablonları:", FontSize = 10, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 4) });
+            // 8. HAZIR HARMONYOS 3 / HYPEROS 3 / EMUI 13 ŞABLON KÜTÜPHANESİ
+            var spPresets = new StackPanel { Margin = new Thickness(0, 2, 0, 12) };
+            spPresets.Children.Add(new TextBlock { Text = "⚡ Hazır HarmonyOS 3 / HyperOS 3 / EMUI 13 Widget Şablonları (Tek Tıkla Doldur):", FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 4) });
             var wpPresets = new WrapPanel();
-            void AddPresetBtn(string label, string title, string sub, string icon, string color, string path)
+            void AddPresetBtn(string label, string title, string sub, string icon, string color, string path, string tpl, string surface, string badge)
             {
                 var b = new WpfButton
                 {
                     Content = label,
-                    Padding = new Thickness(8, 3, 8, 3),
-                    Margin = new Thickness(0, 0, 4, 4),
-                    Background = new SolidColorBrush(MediaColor.FromArgb(25, 255, 255, 255)),
+                    Padding = new Thickness(9, 4, 9, 4),
+                    Margin = new Thickness(0, 0, 5, 5),
+                    Background = new SolidColorBrush(MediaColor.FromArgb(28, 255, 255, 255)),
                     Foreground = WpfBrushes.White,
+                    BorderBrush = new SolidColorBrush(ParseAccentColor(color)),
+                    BorderThickness = new Thickness(1),
                     FontSize = 10,
                     Cursor = WpfCursors.Hand
                 };
@@ -1377,38 +2330,94 @@ namespace OxiDock
                     txtIcon.Text = icon;
                     txtColor.Text = color;
                     txtPath.Text = path;
+                    txtBadge.Text = badge;
+                    draft.CardTemplate = tpl;
+                    draft.BackgroundMode = surface;
+                    RefreshLivePreview();
                 };
                 wpPresets.Children.Add(b);
             }
-            AddPresetBtn("Word", "Word", "Belgeler", "W", "#2563EB", "winword.exe");
-            AddPresetBtn("Excel", "Excel", "Tablolar", "X", "#16A34A", "excel.exe");
-            AddPresetBtn("PowerPoint", "PowerPoint", "Sunumlar", "P", "#EA580C", "powerpnt.exe");
-            AddPresetBtn("VS Code", "VS Code", "Kod Editörü", "⚡", "#0284C7", "code.cmd");
-            AddPresetBtn("Chrome", "Chrome", "Web Tarayıcı", "🌐", "#EAB308", "chrome.exe");
-            AddPresetBtn("Spotify", "Spotify", "Müzik", "🎵", "#22C55E", "spotify.exe");
+            AddPresetBtn("🟦 Word Servis", "Word", "Belge Servisi", "W", "#2563EB", "winword.exe", "HarmonyServiceCard", "Glass", "OFİS");
+            AddPresetBtn("🟩 Excel Servis", "Excel", "Tablo & Veri", "X", "#16A34A", "excel.exe", "HarmonyServiceCard", "Glass", "OFİS");
+            AddPresetBtn("🟧 PowerPoint", "PowerPoint", "Sunum Stüdyosu", "P", "#EA580C", "powerpnt.exe", "HarmonyServiceCard", "Gradient", "SUNUM");
+            AddPresetBtn("🔵 HyperOS VS Code", "VS Code", "Süper İkon IDE", "💻", "#38BDF8", "code.cmd", "HyperSuperIcon", "Gradient", "HYPER");
+            AddPresetBtn("🟠 EMUI Dev Kombo", "VS Code", "Kod + Terminal", "⚡", "#F97316", "code.cmd", "EmuiComboCard", "Glass", "KOMBO");
+            AddPresetBtn("🎵 Spotify Canlı", "Spotify", "Müzik & Medya", "🎵", "#22C55E", "spotify.exe", "HarmonyServiceCard", "Gradient", "CANLI");
+            AddPresetBtn("🌐 Chrome Süper", "Chrome", "Web Tarayıcı", "🌐", "#EAB308", "chrome.exe", "HyperSuperIcon", "Glass", "WEB");
+            AddPresetBtn("🤖 ChatGPT AI", "ChatGPT", "Yapay Zeka", "✨", "#8B5CF6", "https://chatgpt.com", "LiquidGlassCard", "Gradient", "AI");
             spPresets.Children.Add(wpPresets);
             sp.Children.Add(spPresets);
 
-            // Kaydet & Kapat Butonları
-            var dpAction = new DockPanel();
+            // Canlı Önizleme Event Bağlantıları
+            txtTitle.TextChanged += (s, e) => RefreshLivePreview();
+            txtSubtitle.TextChanged += (s, e) => RefreshLivePreview();
+            txtBadge.TextChanged += (s, e) => RefreshLivePreview();
+            txtPath.TextChanged += (s, e) => RefreshLivePreview();
+            txtIcon.TextChanged += (s, e) => RefreshLivePreview();
+            txtColor.TextChanged += (s, e) => RefreshLivePreview();
+            txtSecTitle.TextChanged += (s, e) => RefreshLivePreview();
+            txtSecIcon.TextChanged += (s, e) => RefreshLivePreview();
+            txtSecPath.TextChanged += (s, e) => RefreshLivePreview();
+            chkNativeIcon.Checked += (s, e) => RefreshLivePreview();
+            chkNativeIcon.Unchecked += (s, e) => RefreshLivePreview();
+
+            RefreshLivePreview();
+
+            // 9. ALT AKSİYON BAR (KAYDET / ÇOĞALT / KALDIR)
+            var dpAction = new DockPanel { Margin = new Thickness(0, 6, 0, 0) };
+
+            if (!isNew)
+            {
+                var btnDelete = new WpfButton
+                {
+                    Content = "🗑️ Widget'ı Kaldır / Sil",
+                    Padding = new Thickness(14, 8, 14, 8),
+                    Margin = new Thickness(0, 0, 8, 0),
+                    Background = new SolidColorBrush(MediaColor.FromRgb(220, 38, 38)),
+                    Foreground = WpfBrushes.White,
+                    FontWeight = FontWeights.Bold,
+                    Cursor = WpfCursors.Hand
+                };
+                btnDelete.Click += (s, e) =>
+                {
+                    var prof = _settings.GetActiveProfile();
+                    prof.CustomWidgets?.Remove(widget);
+                    _settings.Save();
+                    ApplySettings(_settings);
+                    dlg.Close();
+                };
+                DockPanel.SetDock(btnDelete, Dock.Left);
+                dpAction.Children.Add(btnDelete);
+            }
+
             var btnSave = new WpfButton
             {
-                Content = isNew ? "✨ Widget'ı Oluştur ve Dock'a Ekle" : "💾 Değişiklikleri Kaydet",
-                Padding = new Thickness(16, 8, 16, 8),
+                Content = isNew ? "✨ Widget'ı Oluştur ve Dock'a Ekle" : "💾 Değişiklikleri Kaydet ve Uygula",
+                Padding = new Thickness(18, 8, 18, 8),
                 Background = new SolidColorBrush(MediaColor.FromRgb(56, 189, 248)),
                 Foreground = WpfBrushes.Black,
                 FontWeight = FontWeights.Bold,
-                Cursor = WpfCursors.Hand
+                Cursor = WpfCursors.Hand,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Right
             };
             btnSave.Click += (s, e) =>
             {
-                widget.Title = string.IsNullOrWhiteSpace(txtTitle.Text) ? "Uygulama" : txtTitle.Text.Trim();
-                widget.Subtitle = txtSubtitle.Text.Trim();
-                widget.TargetPath = txtPath.Text.Trim();
-                widget.IconValue = string.IsNullOrWhiteSpace(txtIcon.Text) ? "📄" : txtIcon.Text.Trim();
-                widget.AccentColor = string.IsNullOrWhiteSpace(txtColor.Text) ? "#38BDF8" : txtColor.Text.Trim();
-                widget.IconType = (cbIconStyle.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag?.ToString() ?? "Fluent";
-                widget.WidgetSize = (cbSize.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag?.ToString() ?? "1x1";
+                RefreshLivePreview();
+                widget.Title = draft.Title;
+                widget.Subtitle = draft.Subtitle;
+                widget.BadgeText = draft.BadgeText;
+                widget.TargetPath = draft.TargetPath;
+                widget.IconValue = draft.IconValue;
+                widget.AccentColor = draft.AccentColor;
+                widget.IconType = draft.IconType;
+                widget.WidgetSize = draft.WidgetSize;
+                widget.CardTemplate = draft.CardTemplate;
+                widget.BackgroundMode = draft.BackgroundMode;
+                widget.UseNativeExeIcon = draft.UseNativeExeIcon;
+                widget.CornerStyle = draft.CornerStyle;
+                widget.SecondaryTitle = draft.SecondaryTitle;
+                widget.SecondaryIcon = draft.SecondaryIcon;
+                widget.SecondaryPath = draft.SecondaryPath;
                 widget.IsEnabled = true;
 
                 var prof = _settings.GetActiveProfile();
@@ -1422,10 +2431,12 @@ namespace OxiDock
                 ApplySettings(_settings);
                 dlg.Close();
             };
+            DockPanel.SetDock(btnSave, Dock.Right);
             dpAction.Children.Add(btnSave);
-            sp.Children.Add(dpAction);
 
-            dlg.Content = sp;
+            sp.Children.Add(dpAction);
+            rootScroll.Content = sp;
+            dlg.Content = rootScroll;
             dlg.ShowDialog();
         }
 

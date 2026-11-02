@@ -55,11 +55,21 @@ namespace OxiDock
         public string Subtitle { get; set; } = "Hızlı Başlat";
         public string TargetPath { get; set; } = "";
         public string Arguments { get; set; } = "";
-        public string IconType { get; set; } = "Fluent"; // "Emoji", "Monochrome", "Fluent", "Material", "Color"
+        public string IconType { get; set; } = "Fluent"; // "Emoji", "Monochrome", "Fluent", "Material", "Color", "NativeExe"
         public string IconValue { get; set; } = "📄"; // Emoji, Harf/Sembol veya Glyph
         public string AccentColor { get; set; } = "#38BDF8"; // Widget vurgusu
-        public string WidgetSize { get; set; } = "1x1"; // "1x1", "1x2", "1x3"
+        public string WidgetSize { get; set; } = "1x2"; // "1x1", "1x2", "1x3"
         public bool IsEnabled { get; set; } = true;
+
+        // HarmonyOS 3 / HyperOS 3 / EMUI 13 Zengin Görsel Özelleştirme Alanları
+        public string CardTemplate { get; set; } = "HarmonyServiceCard"; // "HarmonyServiceCard", "HyperSuperIcon", "EmuiComboCard", "LiquidGlassCard"
+        public string BackgroundMode { get; set; } = "Glass"; // "Glass", "Gradient", "Solid", "Outline"
+        public string BadgeText { get; set; } = "SERVİS"; // Üst kapsül etiketi ("SERVİS", "HYPER", "KOMBO", "CANLI", "")
+        public bool UseNativeExeIcon { get; set; } = true; // .exe / .lnk gerçek Windows ikonunu otomatik çek
+        public string CornerStyle { get; set; } = "Squircle"; // "Squircle" (14px), "Capsule" (20px), "Sharp" (6px)
+        public string SecondaryTitle { get; set; } = "Terminal"; // EMUI 13 Kombo Kart 2. eylem adı
+        public string SecondaryIcon { get; set; } = "⚡"; // EMUI 13 Kombo Kart 2. eylem ikonu
+        public string SecondaryPath { get; set; } = "wt.exe"; // EMUI 13 Kombo Kart 2. eylem hedefi
     }
 
     public class AppSettings
