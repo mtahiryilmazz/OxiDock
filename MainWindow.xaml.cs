@@ -1089,9 +1089,9 @@ namespace OxiDock
             var accent = ParseAccentColor(w.AccentColor);
             double radius = w.CornerStyle switch
             {
-                "Capsule" => 18,
-                "Sharp" => 7,
-                _ => 13 // Squircle (Living Island / Super Tile)
+                "Capsule" => 20,
+                "Sharp" => 8,
+                _ => 16 // Modern Android Squircle (Material & Akıcı Kavis)
             };
             container.CornerRadius = new CornerRadius(radius);
 
@@ -1099,10 +1099,10 @@ namespace OxiDock
             {
                 case "Gradient":
                     container.Background = new LinearGradientBrush(
-                        MediaColor.FromArgb(145, accent.R, accent.G, accent.B),
-                        MediaColor.FromArgb(210, 15, 23, 42),
+                        MediaColor.FromArgb(160, accent.R, accent.G, accent.B),
+                        MediaColor.FromArgb(215, 15, 23, 42),
                         45.0);
-                    container.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(170, accent.R, accent.G, accent.B));
+                    container.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(180, accent.R, accent.G, accent.B));
                     container.BorderThickness = new Thickness(1.2);
                     break;
                 case "Solid":
@@ -1118,15 +1118,25 @@ namespace OxiDock
                     container.BorderBrush = new SolidColorBrush(accent);
                     container.BorderThickness = new Thickness(1.5);
                     break;
-                default: // Glass (Living Island Frosted Glass)
+                default: // Glass (Android Buzlu Cam / Translucent Acrylic)
                     container.Background = new LinearGradientBrush(
-                        MediaColor.FromArgb(55, accent.R, accent.G, accent.B),
-                        MediaColor.FromArgb(35, 255, 255, 255),
+                        MediaColor.FromArgb(65, accent.R, accent.G, accent.B),
+                        MediaColor.FromArgb(38, 255, 255, 255),
                         45.0);
-                    container.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(95, accent.R, accent.G, accent.B));
+                    container.BorderBrush = new SolidColorBrush(MediaColor.FromArgb(120, accent.R, accent.G, accent.B));
                     container.BorderThickness = new Thickness(1);
                     break;
             }
+
+            // Android mikro-derinlik gölgesi
+            container.Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                Color = accent,
+                BlurRadius = 14,
+                ShadowDepth = 2,
+                Direction = 270,
+                Opacity = 0.32
+            };
         }
 
         public void RenderCustomWidgets(DockProfile profile)
@@ -1229,8 +1239,16 @@ namespace OxiDock
                 hoverPill.Child = spHoverActions;
                 rootGrid.Children.Add(hoverPill);
 
-                border.MouseEnter += (s, ev) => hoverPill.Visibility = Visibility.Visible;
-                border.MouseLeave += (s, ev) => hoverPill.Visibility = Visibility.Collapsed;
+                border.MouseEnter += (s, ev) =>
+                {
+                    hoverPill.Visibility = Visibility.Visible;
+                    border.RenderTransform = new TranslateTransform(0, -2);
+                };
+                border.MouseLeave += (s, ev) =>
+                {
+                    hoverPill.Visibility = Visibility.Collapsed;
+                    border.RenderTransform = Transform.Identity;
+                };
 
                 // Tıklama ile çalıştırma (hover butonlarına tıklanmadıysa)
                 border.MouseLeftButtonDown += (s, e) =>
@@ -2087,8 +2105,8 @@ namespace OxiDock
                 }
             }
 
-            // 2. KART ŞABLONU SEÇİCİ (LIVING ISLAND / SUPER TILE / DUAL COMBO)
-            sp.Children.Add(new TextBlock { Text = "1. Ekosistem Kart Tasarımı (Living Island • Super Tile • Dual Combo):", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(226, 232, 240)) });
+            // 2. ANDROID TARZI KART ŞABLONU SEÇİCİ (LIVING ISLAND / SUPER TILE / DUAL COMBO)
+            sp.Children.Add(new TextBlock { Text = "1. Android Tarzı Kart Tasarımı (Living Island • Super Tile • Dual Combo):", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(226, 232, 240)) });
             var wpTemplates = new WrapPanel { Margin = new Thickness(0, 4, 0, 10) };
             var templateOptions = new (string Key, string Title, string Sub, string ColorHex)[]
             {
@@ -3682,7 +3700,7 @@ namespace OxiDock
 
         #endregion
 
-        #region Dinamik Ada (Dynamic Island) Bildirim & Kapsül Sistemi (TwoCode & Sadeesha Mimarisi)
+        #region Canlı Ada (Live Island) Bildirim & Kapsül Sistemi
 
         private DispatcherTimer? _islandTimer;
 
@@ -3750,7 +3768,7 @@ namespace OxiDock
 
         #endregion
 
-        #region Nusa Geçici Dosya Rafı (Temporary File Shelf / Dropzone)
+        #region OxiShelf Hızlı Dosya Rafı (File Shelf / Dropzone)
 
         private readonly List<string> _shelfFiles = new();
         private readonly string _shelfStorageFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OxiDock", "FileShelf");
@@ -3772,7 +3790,7 @@ namespace OxiDock
                 int count = _shelfFiles.Count;
                 TxtShelfCount.Text = $"Raf ({count})";
                 TxtShelfSub.Text = count == 0 ? "Bırak" : (count == 1 ? "1 Dosya" : $"{count} Dosya");
-                WidgetFileShelf.ToolTip = $"Nusa Dosya Rafı ({count} öğe)\n• Dosyaları sürükleyip buraya bırakın\n• Tıklayarak açın veya başka uygulamaya sürükleyin";
+                WidgetFileShelf.ToolTip = $"OxiShelf Dosya Rafı ({count} öğe)\n• Dosyaları sürükleyip buraya bırakın\n• Tıklayarak açın veya başka uygulamaya sürükleyin";
 
                 SpShelfItems.Children.Clear();
                 if (count == 0)
@@ -3875,7 +3893,7 @@ namespace OxiDock
             {
                 if (e.OriginalSource is WpfButton) return;
                 
-                // Nusa Drag & Drop Başlangıcı: Kullanıcı fareyi sürüklerse dış uygulamaya aktarır
+                // Sürükle-Bırak Başlangıcı: Kullanıcı fareyi sürüklerse dış uygulamaya aktarır
                 var startPt = e.GetPosition(null);
                 WpfMouseEventArgs? lastMove = null;
                 void OnMouseMove(object senderMove, WpfMouseEventArgs eMove)
@@ -3973,7 +3991,7 @@ namespace OxiDock
                         }
                     }
                     RefreshShelfUI();
-                    TriggerDynamicIsland("📁 Dosya Rafı (Nusa Shelf)", $"{added} yeni dosya rafa eklendi", "📥", "#38BDF8");
+                    TriggerDynamicIsland("📁 OxiShelf Dosya Rafı", $"{added} yeni dosya rafa eklendi", "📥", "#38BDF8");
                 }
             }
         }

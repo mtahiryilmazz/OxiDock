@@ -26,7 +26,7 @@ namespace OxiDock
         public bool ShowQuickSearch { get; set; } = false;
         public bool ShowVolume { get; set; } = false;
         public bool ShowClipboard { get; set; } = false;
-        public bool ShowFileShelf { get; set; } = true; // Nusa Tarzı Hızlı Dosya Rafı (Dropzone)
+        public bool ShowFileShelf { get; set; } = true; // Hızlı Dosya Rafı (OxiShelf Dropzone)
         public bool EnableDynamicIsland { get; set; } = true; // Dinamik Ada Bildirim ve Durum Kapsülü
 
         // Android Tarzı Widget Boyut / Varyantları: "1x1", "1x2", "1x3"

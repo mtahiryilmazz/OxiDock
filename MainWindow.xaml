@@ -116,7 +116,7 @@
         </Grid.LayoutTransform>
 
         <StackPanel VerticalAlignment="Bottom">
-            <!-- Dinamik Ada (Dynamic Island) Bildirim ve Canlı Durum Kapsülü (Nusa & TwoCode Mimarisi) -->
+            <!-- Canlı Ada (Live Island) Bildirim ve Durum Kapsülü -->
             <Border x:Name="DynamicIslandPill" HorizontalAlignment="Center" Background="#F20B0F19" CornerRadius="18"
                     BorderBrush="#4038BDF8" BorderThickness="1.2" Padding="12,5" Margin="0,0,0,4"
                     Visibility="Collapsed" Opacity="0" Cursor="Hand" MouseLeftButtonDown="DynamicIslandPill_Click">
@@ -172,7 +172,7 @@
                         <ColumnDefinition Width="Auto"/> <!-- 11. Hızlı Spotlight Arama (Yeni) -->
                         <ColumnDefinition Width="Auto"/> <!-- 12. Ses Denetleyicisi (Yeni) -->
                         <ColumnDefinition Width="Auto"/> <!-- 13. Pano / Clipboard (Yeni) -->
-                        <ColumnDefinition Width="Auto"/> <!-- 14. Nusa Geçici Dosya Rafı (File Shelf) -->
+                        <ColumnDefinition Width="Auto"/> <!-- 14. OxiShelf Hızlı Dosya Rafı (File Shelf) -->
                         <ColumnDefinition Width="Auto"/> <!-- 15. Hızlı Not -->
                         <ColumnDefinition Width="Auto"/> <!-- 16. Ayarlar Düğmesi -->
                         <ColumnDefinition Width="Auto"/> <!-- 17. Sağ Tutamaç -->
@@ -840,9 +840,9 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- 14. Nusa Geçici Dosya Rafı (Temporary File Shelf / Dropzone) -->
+                    <!-- 14. OxiShelf Hızlı Dosya Rafı (Temporary File Shelf / Dropzone) -->
                     <Border x:Name="WidgetFileShelf" Grid.Column="14" Style="{StaticResource WidgetContainerStyle}" 
-                            ToolTip="Nusa Dosya Rafı (Dosyaları buraya sürükleyip bırakın)" 
+                            ToolTip="OxiShelf Dosya Rafı (Dosyaları buraya sürükleyip bırakın)" 
                             AllowDrop="True" DragEnter="WidgetFileShelf_DragEnter" DragOver="WidgetFileShelf_DragOver" 
                             Drop="WidgetFileShelf_Drop" MouseLeftButtonUp="WidgetFileShelf_Click" Cursor="Hand">
                         <Border.ContextMenu>
@@ -923,7 +923,7 @@
             </Border>
         </Popup>
 
-        <!-- Nusa Geçici Dosya Rafı (Temporary File Shelf) Açılır Paneli -->
+        <!-- OxiShelf Hızlı Dosya Rafı (File Shelf) Açılır Paneli -->
         <Popup x:Name="PopFileShelf" StaysOpen="False" Placement="Top" AllowsTransparency="True" PopupAnimation="Fade">
             <Border Background="#F00F172A" CornerRadius="16" BorderBrush="#4038BDF8" BorderThickness="1.2"
                     Width="320" MaxHeight="300" Margin="0,0,0,10" Padding="12">
@@ -940,7 +940,7 @@
                     <DockPanel Grid.Row="0" Margin="0,0,0,8">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="📁" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Geçici Dosya Rafı (Nusa Shelf)" FontWeight="Bold" FontSize="12" Foreground="#F8FAFC" VerticalAlignment="Center"/>
+                            <TextBlock Text="OxiShelf — Hızlı Dosya Rafı" FontWeight="Bold" FontSize="12" Foreground="#F8FAFC" VerticalAlignment="Center"/>
                         </StackPanel>
                         <Button Content="✕" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" 
                                 Foreground="#94A3B8" Cursor="Hand" Click="BtnCloseShelf_Click"/>

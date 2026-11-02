@@ -420,7 +420,7 @@
                             <Border Style="{StaticResource SettingCardStyle}">
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Left">
-                                        <TextBlock Text="📁 Nusa Geçici Dosya Rafı (Dropzone Shelf)" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="📁 OxiShelf Geçici Dosya Rafı (Dropzone Shelf)" FontWeight="SemiBold" FontSize="13"/>
                                         <TextBlock Text="Dosyaları dock'a sürükleyip geçici olarak rafta bekletin ve uygulamalara taşıyın." FontSize="11" Foreground="#94A3B8"/>
                                     </StackPanel>
                                     <CheckBox x:Name="ChkFileShelf" IsChecked="True" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"/>
