@@ -44,6 +44,8 @@ namespace OxiDock
             ChkAlwaysOnTop.IsChecked = _settings.AlwaysOnTop;
             ChkAutoHide.IsChecked = _settings.AutoHide;
             ChkFullscreenHide.IsChecked = _settings.HideDuringFullscreen;
+            ChkDynamicIsland.IsChecked = _settings.EnableDynamicIsland;
+            ChkFileShelf.IsChecked = _settings.ShowFileShelf;
             TxtWeatherCity.Text = _settings.WeatherCity;
 
             // 2. Düzen
@@ -136,7 +138,7 @@ namespace OxiDock
                 });
                 spEmpty.Children.Add(new TextBlock
                 {
-                    Text = "Üstteki '+ Yeni Özel Widget Oluştur' butonuna tıklayarak HarmonyOS 3, HyperOS 3 veya EMUI 13 tarzı widget'ınızı saniyeler içinde tasarlayabilirsiniz.",
+                    Text = "Üstteki '+ Yeni Özel Widget Oluştur' butonuna tıklayarak Living Island, Super Tile veya Dual Combo tarzı widget'ınızı saniyeler içinde tasarlayabilirsiniz.",
                     FontSize = 11,
                     Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)),
                     HorizontalAlignment = WpfHorizontalAlignment.Center,
@@ -465,6 +467,8 @@ namespace OxiDock
                     AlwaysOnTop = ChkAlwaysOnTop?.IsChecked == true,
                     AutoHide = ChkAutoHide?.IsChecked == true,
                     HideDuringFullscreen = ChkFullscreenHide?.IsChecked == true,
+                    EnableDynamicIsland = ChkDynamicIsland?.IsChecked == true,
+                    ShowFileShelf = ChkFileShelf?.IsChecked == true,
                     WeatherCity = string.IsNullOrWhiteSpace(TxtWeatherCity?.Text) ? _settings.WeatherCity : TxtWeatherCity.Text.Trim(),
                     LayoutScenario = GetComboValue(CmbScenario, _settings.LayoutScenario),
                     DockPosition = GetComboValue(CmbPosition, _settings.DockPosition),
@@ -492,6 +496,8 @@ namespace OxiDock
             _settings.AlwaysOnTop = ChkAlwaysOnTop.IsChecked == true;
             _settings.AutoHide = ChkAutoHide.IsChecked == true;
             _settings.HideDuringFullscreen = ChkFullscreenHide.IsChecked == true;
+            _settings.EnableDynamicIsland = ChkDynamicIsland.IsChecked == true;
+            _settings.ShowFileShelf = ChkFileShelf.IsChecked == true;
             _settings.WeatherCity = string.IsNullOrWhiteSpace(TxtWeatherCity.Text) ? "İstanbul" : TxtWeatherCity.Text.Trim();
 
             // 2. Düzen

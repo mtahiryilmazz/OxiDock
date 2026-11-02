@@ -27,6 +27,10 @@ using DragEventArgs = System.Windows.DragEventArgs;
 using DragDropEffects = System.Windows.DragDropEffects;
 using Windows.Media.Control;
 using TextBox = System.Windows.Controls.TextBox;
+using System.Windows.Media.Animation;
+using WpfDataObject = System.Windows.DataObject;
+using WpfDataFormats = System.Windows.DataFormats;
+using WpfMouseEventArgs = System.Windows.Input.MouseEventArgs;
 
 namespace OxiDock
 {
@@ -91,6 +95,7 @@ namespace OxiDock
             InitializeAiServer();
             InitializeMediaController();
             InitializeNetworkMonitor();
+            InitializeFileShelf();
         }
 
         #region Ayarları Uygulama & Konumlandırma
@@ -126,6 +131,7 @@ namespace OxiDock
             WidgetQuickSearch.Visibility = activeProfile.ShowQuickSearch ? Visibility.Visible : Visibility.Collapsed;
             WidgetVolume.Visibility = activeProfile.ShowVolume ? Visibility.Visible : Visibility.Collapsed;
             WidgetClipboard.Visibility = activeProfile.ShowClipboard ? Visibility.Visible : Visibility.Collapsed;
+            WidgetFileShelf.Visibility = activeProfile.ShowFileShelf ? Visibility.Visible : Visibility.Collapsed;
 
             // Android Tarzı Widget Boyut Varyantlarını Uygula (1x1, 1x2, 1x3)
             ApplyWidgetSizes(activeProfile);
@@ -1085,7 +1091,7 @@ namespace OxiDock
             {
                 "Capsule" => 18,
                 "Sharp" => 7,
-                _ => 13 // Squircle (HyperOS / HarmonyOS)
+                _ => 13 // Squircle (Living Island / Super Tile)
             };
             container.CornerRadius = new CornerRadius(radius);
 
@@ -1112,7 +1118,7 @@ namespace OxiDock
                     container.BorderBrush = new SolidColorBrush(accent);
                     container.BorderThickness = new Thickness(1.5);
                     break;
-                default: // Glass (HarmonyOS / HyperOS Frosted Glass)
+                default: // Glass (Living Island Frosted Glass)
                     container.Background = new LinearGradientBrush(
                         MediaColor.FromArgb(55, accent.R, accent.G, accent.B),
                         MediaColor.FromArgb(35, 255, 255, 255),
@@ -1145,7 +1151,7 @@ namespace OxiDock
 
                 border.ToolTip = $"✨ {widget.Title} ({widget.WidgetSize})\n{widget.Subtitle}\n• Sol Tık: Başlat | Üzerine Gel: ✎ Düzenle / ✕ Sil | Sağ Tık: Tüm Seçenekler";
 
-                // Ana kapsayıcı: İçerik + Android/HyperOS Hover Aksiyon Barı (✎ Düzenle | 📏 Boyut | ✕ Kaldır)
+                // Ana kapsayıcı: İçerik + Android Hover Aksiyon Barı (✎ Düzenle | 📏 Boyut | ✕ Kaldır)
                 var rootGrid = new Grid();
                 var contentEl = BuildCustomWidgetContent(widget);
                 rootGrid.Children.Add(contentEl);
@@ -1245,7 +1251,7 @@ namespace OxiDock
                     }
                 };
 
-                // Zengin HarmonyOS 3 / HyperOS 3 Sağ Tık Menüsü
+                // Zengin Living Island / Super Tile Sağ Tık Menüsü
                 var cm = new WpfContextMenu
                 {
                     Background = new SolidColorBrush(MediaColor.FromRgb(20, 22, 32)),
@@ -1264,18 +1270,18 @@ namespace OxiDock
 
                 cm.Items.Add(new WpfSeparator());
 
-                // Kart Şablonu Alt Menüsü (HarmonyOS 3 / HyperOS 3 / EMUI 13)
-                var miTemplate = new WpfMenuItem { Header = "✨  OS Kart Tasarımı (Harmony / HyperOS / EMUI)" };
+                // Canlı Kart Şablonu Alt Menüsü (Living Island / Super Tile / Dual Combo / Liquid Glass)
+                var miTemplate = new WpfMenuItem { Header = "✨  Widget Tasarım Stili (Living Island / Super Tile / Combo)" };
                 void AddTemplateItem(string label, string key)
                 {
                     var item = new WpfMenuItem { Header = label, IsChecked = widget.CardTemplate == key };
                     item.Click += (s, e) => { widget.CardTemplate = key; _settings.Save(); ApplySettings(_settings); };
                     miTemplate.Items.Add(item);
                 }
-                AddTemplateItem("🟢 HarmonyOS 3 Servis Kartı (Kapsül & Durum Noktası)", "HarmonyServiceCard");
-                AddTemplateItem("🔵 Xiaomi HyperOS 3 Süper İkon (3B Parlama & Rozet)", "HyperSuperIcon");
-                AddTemplateItem("🟠 Huawei EMUI 13 Akıllı Kombo (Çift Kısayol Grubu)", "EmuiComboCard");
-                AddTemplateItem("🌊 OxiDock Liquid Glass (Neon Gradyan Kart)", "LiquidGlassCard");
+                AddTemplateItem("🟢 Living Island Kartı (Dinamik Kapsül & Durum Çubuğu)", "LivingIslandCard");
+                AddTemplateItem("🔵 Super Tile 3B İkon (Genişletilmiş Squircle & Rozet)", "SuperTileCard");
+                AddTemplateItem("🟠 Dual Combo Akıllı Grup (Çift Hızlı Eylem)", "DualComboCard");
+                AddTemplateItem("🌊 Liquid Glass (Neon Akıcı Cam Kart)", "LiquidGlassCard");
                 cm.Items.Add(miTemplate);
 
                 // Yüzey Stili Alt Menüsü
@@ -1287,8 +1293,8 @@ namespace OxiDock
                     miSurface.Items.Add(item);
                 }
                 AddSurfaceItem("🪟 Buzlu Cam (Frosted Glass)", "Glass");
-                AddSurfaceItem("🌈 Çift Tonlu Gradyan (HyperOS Gradient)", "Gradient");
-                AddSurfaceItem("🎨 Tam Renkli Dolgu (Android 14 Solid)", "Solid");
+                AddSurfaceItem("🌈 Çift Tonlu Gradyan (Neon Gradient)", "Gradient");
+                AddSurfaceItem("🎨 Tam Renkli Dolgu (Vivid Solid)", "Solid");
                 AddSurfaceItem("⚡ Neon Çerçeve (Minimal Outline)", "Outline");
                 cm.Items.Add(miSurface);
 
@@ -1391,7 +1397,7 @@ namespace OxiDock
         public static Border BuildStyledIconElement(CustomAppWidget w, double boxSize = 30, double fontSize = 14)
         {
             var accentColor = ParseAccentColor(w.AccentColor);
-            double radius = w.CardTemplate == "HyperSuperIcon" ? boxSize * 0.34 : boxSize * 0.28;
+            double radius = (w.CardTemplate == "SuperTileCard" || w.CardTemplate == "HyperSuperIcon") ? boxSize * 0.34 : boxSize * 0.28;
 
             var iconBorder = new Border
             {
@@ -1491,10 +1497,10 @@ namespace OxiDock
                 ? new SolidColorBrush(MediaColor.FromArgb(220, 255, 255, 255))
                 : new SolidColorBrush(accentColor);
 
-            string template = string.IsNullOrWhiteSpace(w.CardTemplate) ? "HarmonyServiceCard" : w.CardTemplate;
+            string template = string.IsNullOrWhiteSpace(w.CardTemplate) ? "LivingIslandCard" : w.CardTemplate;
 
-            // 1. XIAOMI HYPEROS 3 "SUPER ICON" KARTI
-            if (template == "HyperSuperIcon")
+            // 1. SUPER TILE (3B RADYAL PARLAMA & GENİŞLETİLMİŞ KART)
+            if (template == "SuperTileCard" || template == "HyperSuperIcon")
             {
                 var iconEl = BuildStyledIconElement(w, w.WidgetSize == "1x1" ? 34 : 32, w.WidgetSize == "1x1" ? 16 : 15);
                 iconEl.Effect = new System.Windows.Media.Effects.DropShadowEffect
@@ -1581,7 +1587,7 @@ namespace OxiDock
                     sp.Children.Add(spTop);
                     sp.Children.Add(new TextBlock
                     {
-                        Text = string.IsNullOrWhiteSpace(w.Subtitle) ? "HyperOS Süper İkon" : w.Subtitle,
+                        Text = string.IsNullOrWhiteSpace(w.Subtitle) ? "Super Tile" : w.Subtitle,
                         FontSize = 8.5,
                         FontWeight = FontWeights.SemiBold,
                         Foreground = secondaryFg,
@@ -1594,8 +1600,8 @@ namespace OxiDock
                 }
             }
 
-            // 2. HUAWEI EMUI 13 "SMART WIDGET COMBO" (ÇİFT KISAYOL GRUP KARTI)
-            if (template == "EmuiComboCard")
+            // 2. DUAL COMBO (ÇİFT HIZLI EYLEM GRUP KARTI)
+            if (template == "DualComboCard" || template == "EmuiComboCard")
             {
                 var iconEl = BuildStyledIconElement(w, 28, 13);
                 var dp = new DockPanel
@@ -1605,7 +1611,7 @@ namespace OxiDock
                     MinWidth = w.WidgetSize == "1x1" ? 62 : (w.WidgetSize == "1x3" ? 150 : 108)
                 };
 
-                // Sağdaki 2. Hızlı Eylem Kapsülü (EMUI 13 Combo)
+                // Sağdaki 2. Hızlı Eylem Kapsülü (Dual Combo)
                 var btnSub = new WpfButton
                 {
                     Style = (Style)FindResource("DockButtonStyle"),
@@ -1668,7 +1674,7 @@ namespace OxiDock
                     });
                     spText.Children.Add(new TextBlock
                     {
-                        Text = string.IsNullOrWhiteSpace(w.Subtitle) ? "EMUI Kombo" : w.Subtitle,
+                        Text = string.IsNullOrWhiteSpace(w.Subtitle) ? "Dual Combo" : w.Subtitle,
                         FontSize = 8,
                         Foreground = secondaryFg,
                         TextTrimming = TextTrimming.CharacterEllipsis,
@@ -1680,7 +1686,7 @@ namespace OxiDock
                 return dp;
             }
 
-            // 3. HUAWEI HARMONYOS 3 "SERVICE CARD" (SERVİS KARTI & DURUM ÇUBUĞU) / LIQUID GLASS
+            // 3. LIVING ISLAND CARD (DİNAMİK KAPSÜL & SERVİS KARTI) / LIQUID GLASS
             var mainIcon = BuildStyledIconElement(w, w.WidgetSize == "1x1" ? 30 : 28, w.WidgetSize == "1x1" ? 14 : 13);
 
             if (w.WidgetSize == "1x1")
@@ -1705,7 +1711,7 @@ namespace OxiDock
                     MaxWidth = 54,
                     Margin = new Thickness(0, 2, 0, 1)
                 });
-                // HarmonyOS 3 Alt Servis Çizgisi (Service Snippet Indicator Bar)
+                // Living Island Alt Servis Çizgisi (Living Island Glow Indicator)
                 pnl.Children.Add(new Border
                 {
                     Width = 18,
@@ -1781,7 +1787,7 @@ namespace OxiDock
 
                 spText.Children.Add(new TextBlock
                 {
-                    Text = string.IsNullOrWhiteSpace(w.Subtitle) ? "Servis Kartı" : w.Subtitle,
+                    Text = string.IsNullOrWhiteSpace(w.Subtitle) ? "Living Island" : w.Subtitle,
                     FontSize = 8.5,
                     FontWeight = FontWeights.SemiBold,
                     Foreground = secondaryFg,
@@ -1793,7 +1799,7 @@ namespace OxiDock
                 dock.Children.Add(spText);
                 outerStack.Children.Add(dock);
 
-                // HarmonyOS 3 Alt Servis Kapsül Çizgisi
+                // Living Island Alt Kapsül Çizgisi
                 outerStack.Children.Add(new Border
                 {
                     Width = 24,
@@ -1855,9 +1861,9 @@ namespace OxiDock
                 AccentColor = "#38BDF8",
                 TargetPath = "code.cmd",
                 WidgetSize = "1x2",
-                CardTemplate = "HarmonyServiceCard",
+                CardTemplate = "LivingIslandCard",
                 BackgroundMode = "Glass",
-                BadgeText = "SERVİS",
+                BadgeText = "CANLI",
                 UseNativeExeIcon = true,
                 CornerStyle = "Squircle",
                 SecondaryTitle = "Terminal",
@@ -1878,9 +1884,9 @@ namespace OxiDock
                 AccentColor = widget.AccentColor,
                 WidgetSize = widget.WidgetSize,
                 IsEnabled = widget.IsEnabled,
-                CardTemplate = string.IsNullOrWhiteSpace(widget.CardTemplate) ? "HarmonyServiceCard" : widget.CardTemplate,
+                CardTemplate = string.IsNullOrWhiteSpace(widget.CardTemplate) ? "LivingIslandCard" : widget.CardTemplate,
                 BackgroundMode = string.IsNullOrWhiteSpace(widget.BackgroundMode) ? "Glass" : widget.BackgroundMode,
-                BadgeText = widget.BadgeText ?? "SERVİS",
+                BadgeText = widget.BadgeText ?? "CANLI",
                 UseNativeExeIcon = widget.UseNativeExeIcon,
                 CornerStyle = string.IsNullOrWhiteSpace(widget.CornerStyle) ? "Squircle" : widget.CornerStyle,
                 SecondaryTitle = widget.SecondaryTitle ?? "Terminal",
@@ -1890,7 +1896,7 @@ namespace OxiDock
 
             var dlg = new Window
             {
-                Title = isNew ? "OxiDock • HarmonyOS 3 / HyperOS 3 / EMUI 13 Widget Stüdyosu" : $"OxiDock • '{widget.Title}' Widget Stüdyosu",
+                Title = isNew ? "OxiDock • Görsel Widget Stüdyosu (Living Island & Super Tile)" : $"OxiDock • '{widget.Title}' Widget Stüdyosu",
                 Width = 680,
                 Height = 760,
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
@@ -1910,7 +1916,7 @@ namespace OxiDock
             // Başlık & Alt Bilgi
             sp.Children.Add(new TextBlock
             {
-                Text = isNew ? "✨ OxiDock Görsel Widget Stüdyosu (HarmonyOS 3 • HyperOS 3 • EMUI 13)" : $"🎨 '{widget.Title}' Widget'ını Özelleştir veya Kaldır",
+                Text = isNew ? "✨ OxiDock Görsel Widget Stüdyosu (Living Island • Super Tile • Dual Combo)" : $"🎨 '{widget.Title}' Widget'ını Özelleştir veya Kaldır",
                 FontWeight = FontWeights.Bold,
                 FontSize = 16,
                 Foreground = new SolidColorBrush(MediaColor.FromRgb(56, 189, 248))
@@ -1947,7 +1953,7 @@ namespace OxiDock
             });
             var txtStageMeta = new TextBlock
             {
-                Text = "HarmonyOS 3 Servis Kartı • 1x2 • Buzlu Cam",
+                Text = "Living Island Kartı • 1x2 • Buzlu Cam",
                 FontSize = 10,
                 Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)),
                 Margin = new Thickness(0, 2, 0, 0)
@@ -2013,7 +2019,7 @@ namespace OxiDock
                 draft.SecondaryIcon = txtSecIcon.Text.Trim();
                 draft.SecondaryPath = txtSecPath.Text.Trim();
 
-                bdComboSection.Visibility = draft.CardTemplate == "EmuiComboCard" ? Visibility.Visible : Visibility.Collapsed;
+                bdComboSection.Visibility = (draft.CardTemplate == "DualComboCard" || draft.CardTemplate == "EmuiComboCard") ? Visibility.Visible : Visibility.Collapsed;
                 previewHolder.Child = BuildCustomWidgetPreviewCard(draft);
                 txtStageMeta.Text = $"{draft.CardTemplate} • Boyut: {draft.WidgetSize} • Yüzey: {draft.BackgroundMode} • İkon: {draft.IconType}";
 
@@ -2022,7 +2028,7 @@ namespace OxiDock
                 var iconStyles = new (string Key, string Label, bool UseNative)[]
                 {
                     ("NativeExe", "Gerçek (.exe)", true),
-                    ("SuperIcon", "HyperOS 3B", false),
+                    ("SuperIcon", "3B Super Tile", false),
                     ("Fluent", "Fluent Cam", false),
                     ("Material", "Material", false),
                     ("Color", "Tam Dolgu", false),
@@ -2039,7 +2045,7 @@ namespace OxiDock
                         AccentColor = draft.AccentColor,
                         IconType = st.Key == "NativeExe" ? "Fluent" : st.Key,
                         UseNativeExeIcon = st.UseNative,
-                        CardTemplate = st.Key == "SuperIcon" ? "HyperSuperIcon" : draft.CardTemplate
+                        CardTemplate = st.Key == "SuperIcon" ? "SuperTileCard" : draft.CardTemplate
                     };
 
                     var card = new Border
@@ -2081,15 +2087,15 @@ namespace OxiDock
                 }
             }
 
-            // 2. HARMONYOS 3 / HYPEROS 3 / EMUI 13 KART ŞABLONU SEÇİCİ
-            sp.Children.Add(new TextBlock { Text = "1. Ekosistem Kart Tasarımı (HarmonyOS 3 • HyperOS 3 • EMUI 13):", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(226, 232, 240)) });
+            // 2. KART ŞABLONU SEÇİCİ (LIVING ISLAND / SUPER TILE / DUAL COMBO)
+            sp.Children.Add(new TextBlock { Text = "1. Ekosistem Kart Tasarımı (Living Island • Super Tile • Dual Combo):", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(226, 232, 240)) });
             var wpTemplates = new WrapPanel { Margin = new Thickness(0, 4, 0, 10) };
             var templateOptions = new (string Key, string Title, string Sub, string ColorHex)[]
             {
-                ("HarmonyServiceCard", "🟢 HarmonyOS 3 Servis", "Kapsül & Durum Çubuğu", "#10B981"),
-                ("HyperSuperIcon", "🔵 HyperOS 3 Süper İkon", "3B Parlama & Rozet", "#38BDF8"),
-                ("EmuiComboCard", "🟠 EMUI 13 Akıllı Kombo", "Çift Uygulama Grubu", "#F97316"),
-                ("LiquidGlassCard", "🌊 OxiDock Liquid Glass", "Akıcı Neon Cam", "#8B5CF6")
+                ("LivingIslandCard", "🟢 Living Island", "Kapsül & Durum Çubuğu", "#10B981"),
+                ("SuperTileCard", "🔵 Super Tile", "3B Parlama & Rozet", "#38BDF8"),
+                ("DualComboCard", "🟠 Dual Combo", "Çift Uygulama Grubu", "#F97316"),
+                ("LiquidGlassCard", "🌊 Liquid Glass", "Akıcı Neon Cam", "#8B5CF6")
             };
             foreach (var tpl in templateOptions)
             {
@@ -2179,11 +2185,11 @@ namespace OxiDock
             var wpSwatches = new WrapPanel { VerticalAlignment = VerticalAlignment.Center };
             var paletteColors = new (string Hex, string Name)[]
             {
-                ("#38BDF8", "HyperOS Mavi"),
+                ("#38BDF8", "Siber Mavi"),
                 ("#2563EB", "Kraliyet Mavisi"),
-                ("#10B981", "Harmony Zümrüt"),
-                ("#22C55E", "Spotify Yeşil"),
-                ("#F97316", "EMUI Turuncu"),
+                ("#10B981", "Zümrüt Yeşili"),
+                ("#22C55E", "Canlı Yeşil"),
+                ("#F97316", "Amber Turuncu"),
                 ("#EAB308", "Altın Sarısı"),
                 ("#EF4444", "Mercan Kırmızı"),
                 ("#EC4899", "Neon Pembe"),
@@ -2287,9 +2293,9 @@ namespace OxiDock
             sp.Children.Add(dpPath);
             sp.Children.Add(chkNativeIcon);
 
-            // EMUI 13 Kombo Kart 2. Eylem Bölümü
+            // Dual Combo Kart 2. Eylem Bölümü
             var spComboInner = new StackPanel();
-            spComboInner.Children.Add(new TextBlock { Text = "🟠 EMUI 13 Akıllı Kombo — İkincil Hızlı Eylem:", FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(251, 146, 60)), Margin = new Thickness(0, 0, 0, 4) });
+            spComboInner.Children.Add(new TextBlock { Text = "🟠 Dual Combo — İkincil Hızlı Eylem:", FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(251, 146, 60)), Margin = new Thickness(0, 0, 0, 4) });
             var gridCombo = new Grid();
             gridCombo.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             gridCombo.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.6, GridUnitType.Star) });
@@ -2305,9 +2311,9 @@ namespace OxiDock
             bdComboSection.Child = spComboInner;
             sp.Children.Add(bdComboSection);
 
-            // 8. HAZIR HARMONYOS 3 / HYPEROS 3 / EMUI 13 ŞABLON KÜTÜPHANESİ
+            // 8. HAZIR WIDGET ŞABLONLARI KÜTÜPHANESİ
             var spPresets = new StackPanel { Margin = new Thickness(0, 2, 0, 12) };
-            spPresets.Children.Add(new TextBlock { Text = "⚡ Hazır HarmonyOS 3 / HyperOS 3 / EMUI 13 Widget Şablonları (Tek Tıkla Doldur):", FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 4) });
+            spPresets.Children.Add(new TextBlock { Text = "⚡ Hazır Widget Şablonları (Tek Tıkla Doldur):", FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 4) });
             var wpPresets = new WrapPanel();
             void AddPresetBtn(string label, string title, string sub, string icon, string color, string path, string tpl, string surface, string badge)
             {
@@ -2337,13 +2343,14 @@ namespace OxiDock
                 };
                 wpPresets.Children.Add(b);
             }
-            AddPresetBtn("🟦 Word Servis", "Word", "Belge Servisi", "W", "#2563EB", "winword.exe", "HarmonyServiceCard", "Glass", "OFİS");
-            AddPresetBtn("🟩 Excel Servis", "Excel", "Tablo & Veri", "X", "#16A34A", "excel.exe", "HarmonyServiceCard", "Glass", "OFİS");
-            AddPresetBtn("🟧 PowerPoint", "PowerPoint", "Sunum Stüdyosu", "P", "#EA580C", "powerpnt.exe", "HarmonyServiceCard", "Gradient", "SUNUM");
-            AddPresetBtn("🔵 HyperOS VS Code", "VS Code", "Süper İkon IDE", "💻", "#38BDF8", "code.cmd", "HyperSuperIcon", "Gradient", "HYPER");
-            AddPresetBtn("🟠 EMUI Dev Kombo", "VS Code", "Kod + Terminal", "⚡", "#F97316", "code.cmd", "EmuiComboCard", "Glass", "KOMBO");
-            AddPresetBtn("🎵 Spotify Canlı", "Spotify", "Müzik & Medya", "🎵", "#22C55E", "spotify.exe", "HarmonyServiceCard", "Gradient", "CANLI");
-            AddPresetBtn("🌐 Chrome Süper", "Chrome", "Web Tarayıcı", "🌐", "#EAB308", "chrome.exe", "HyperSuperIcon", "Glass", "WEB");
+            AddPresetBtn("🟦 Word Ada", "Word", "Belge Düzenleyici", "W", "#2563EB", "winword.exe", "LivingIslandCard", "Glass", "OFİS");
+            AddPresetBtn("🟩 Excel Ada", "Excel", "Tablo & Veri", "X", "#16A34A", "excel.exe", "LivingIslandCard", "Glass", "OFİS");
+            AddPresetBtn("🟧 PowerPoint", "PowerPoint", "Sunum Stüdyosu", "P", "#EA580C", "powerpnt.exe", "LivingIslandCard", "Gradient", "SUNUM");
+            AddPresetBtn("🔵 Super VS Code", "VS Code", "Super Tile IDE", "💻", "#38BDF8", "code.cmd", "SuperTileCard", "Gradient", "DEV");
+            AddPresetBtn("🟠 Dev Dual Kombo", "VS Code", "Kod + Terminal", "⚡", "#F97316", "code.cmd", "DualComboCard", "Glass", "KOMBO");
+            AddPresetBtn("🎵 Spotify Canlı", "Spotify", "Müzik & Medya", "🎵", "#22C55E", "spotify.exe", "LivingIslandCard", "Gradient", "CANLI");
+            AddPresetBtn("🌐 Chrome Super", "Chrome", "Web Tarayıcı", "🌐", "#EAB308", "chrome.exe", "SuperTileCard", "Glass", "WEB");
+            AddPresetBtn("🤖 ChatGPT AI", "ChatGPT", "Yapay Zeka", "✨", "#8B5CF6", "https://chatgpt.com", "LiquidGlassCard", "Gradient", "AI");
             AddPresetBtn("🤖 ChatGPT AI", "ChatGPT", "Yapay Zeka", "✨", "#8B5CF6", "https://chatgpt.com", "LiquidGlassCard", "Gradient", "AI");
             spPresets.Children.Add(wpPresets);
             sp.Children.Add(spPresets);
@@ -3136,6 +3143,8 @@ namespace OxiDock
 
         #region Canlı Windows Medya & Müzik Çalar (GSMTC Entegrasyonu)
 
+        private string _lastMediaTitle = "";
+
         private void InitializeMediaController()
         {
             try
@@ -3191,6 +3200,12 @@ namespace OxiDock
                     TxtSongTitle1x3.Text = title;
                     TxtSongArtist1x3.Text = TxtSongArtist.Text;
                     TxtPlayPauseIcon1x3.Text = TxtPlayPauseIcon.Text;
+
+                    if (isPlaying && title != "Medyayı Başlat" && _lastMediaTitle != title)
+                    {
+                        _lastMediaTitle = title;
+                        TriggerDynamicIsland(title, artist, "🎵", "#22C55E");
+                    }
                 }
                 else
                 {
@@ -3396,6 +3411,7 @@ namespace OxiDock
                         case "quicksearch": profile.QuickSearchSize = size; break;
                         case "volume": profile.VolumeSize = size; break;
                         case "clipboard": profile.ClipboardSize = size; break;
+                        case "fileshelf": profile.FileShelfSize = size; break;
                     }
                     _settings.Save();
                     ApplySettings(_settings);
@@ -3609,6 +3625,8 @@ namespace OxiDock
         }
 
         // --- Pano Geçmişi Widget'ı ---
+        private string _lastClipboardText = "";
+
         private void UpdateClipboardPreview()
         {
             try
@@ -3618,8 +3636,20 @@ namespace OxiDock
                     string txt = System.Windows.Clipboard.GetText().Trim().Replace("\r", " ").Replace("\n", " ");
                     if (!string.IsNullOrWhiteSpace(txt))
                     {
-                        TxtClipboardPreview.Text = txt.Length > 16 ? txt.Substring(0, 14) + ".." : txt;
+                        string prev = txt.Length > 16 ? txt.Substring(0, 14) + ".." : txt;
+                        TxtClipboardPreview.Text = prev;
                         TxtClipboardPreview.ToolTip = $"Son Kopyalanan:\n{txt}";
+
+                        if (!string.IsNullOrEmpty(_lastClipboardText) && _lastClipboardText != txt)
+                        {
+                            _lastClipboardText = txt;
+                            string islandSnippet = txt.Length > 28 ? txt.Substring(0, 26) + ".." : txt;
+                            TriggerDynamicIsland("📋 Panoya Kopyalandı", islandSnippet, "📋", "#38BDF8");
+                        }
+                        else
+                        {
+                            _lastClipboardText = txt;
+                        }
                         return;
                     }
                 }
@@ -3648,6 +3678,345 @@ namespace OxiDock
             p.ShowClipboard = false;
             _settings.Save();
             ApplySettings(_settings);
+        }
+
+        #endregion
+
+        #region Dinamik Ada (Dynamic Island) Bildirim & Kapsül Sistemi (TwoCode & Sadeesha Mimarisi)
+
+        private DispatcherTimer? _islandTimer;
+
+        public void TriggerDynamicIsland(string title, string sub, string icon = "✨", string dotColor = "#10B981", int durationMs = 3500, Action? action = null)
+        {
+            if (!_settings.EnableDynamicIsland) return;
+
+            Dispatcher.Invoke(() =>
+            {
+                TxtIslandTitle.Text = title;
+                TxtIslandSub.Text = sub;
+                TxtIslandIcon.Text = icon;
+                try { BdIslandDot.Background = new SolidColorBrush(ParseAccentColor(dotColor)); } catch { }
+
+                if (action != null)
+                {
+                    BtnIslandAction.Visibility = Visibility.Visible;
+                    BtnIslandAction.Tag = action;
+                }
+                else
+                {
+                    BtnIslandAction.Visibility = Visibility.Collapsed;
+                }
+
+                DynamicIslandPill.Visibility = Visibility.Visible;
+
+                var anim = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(220));
+                DynamicIslandPill.BeginAnimation(OpacityProperty, anim);
+
+                _islandTimer?.Stop();
+                _islandTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(durationMs) };
+                _islandTimer.Tick += (s, e) =>
+                {
+                    _islandTimer.Stop();
+                    var fadeOut = new DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(300));
+                    fadeOut.Completed += (s2, e2) => DynamicIslandPill.Visibility = Visibility.Collapsed;
+                    DynamicIslandPill.BeginAnimation(OpacityProperty, fadeOut);
+                };
+                _islandTimer.Start();
+            });
+        }
+
+        private void DynamicIslandPill_Click(object sender, MouseButtonEventArgs e)
+        {
+            // Ada tıklandığında ilgili widget veya aksiyonu tetikle
+            if (BtnIslandAction.Visibility == Visibility.Visible && BtnIslandAction.Tag is Action act)
+            {
+                act();
+            }
+            else
+            {
+                // Bilgi amaçlı hızlı ada daraltması
+                DynamicIslandPill.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void BtnIslandAction_Click(object sender, RoutedEventArgs e)
+        {
+            if (BtnIslandAction.Tag is Action act)
+            {
+                act();
+            }
+            DynamicIslandPill.Visibility = Visibility.Collapsed;
+        }
+
+        #endregion
+
+        #region Nusa Geçici Dosya Rafı (Temporary File Shelf / Dropzone)
+
+        private readonly List<string> _shelfFiles = new();
+        private readonly string _shelfStorageFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OxiDock", "FileShelf");
+
+        private void InitializeFileShelf()
+        {
+            try
+            {
+                Directory.CreateDirectory(_shelfStorageFolder);
+            }
+            catch { }
+            RefreshShelfUI();
+        }
+
+        private void RefreshShelfUI()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                int count = _shelfFiles.Count;
+                TxtShelfCount.Text = $"Raf ({count})";
+                TxtShelfSub.Text = count == 0 ? "Bırak" : (count == 1 ? "1 Dosya" : $"{count} Dosya");
+                WidgetFileShelf.ToolTip = $"Nusa Dosya Rafı ({count} öğe)\n• Dosyaları sürükleyip buraya bırakın\n• Tıklayarak açın veya başka uygulamaya sürükleyin";
+
+                SpShelfItems.Children.Clear();
+                if (count == 0)
+                {
+                    TxtShelfEmptyHint.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    TxtShelfEmptyHint.Visibility = Visibility.Collapsed;
+                    foreach (var path in _shelfFiles.ToArray())
+                    {
+                        var row = BuildShelfItemRow(path);
+                        SpShelfItems.Children.Add(row);
+                    }
+                }
+            });
+        }
+
+        private UIElement BuildShelfItemRow(string filePath)
+        {
+            string fileName = Path.GetFileName(filePath);
+            string ext = Path.GetExtension(filePath).ToUpperInvariant();
+            if (string.IsNullOrEmpty(fileName)) fileName = filePath;
+
+            var border = new Border
+            {
+                Background = new SolidColorBrush(MediaColor.FromArgb(30, 255, 255, 255)),
+                BorderBrush = new SolidColorBrush(MediaColor.FromArgb(45, 56, 189, 248)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(8, 5, 8, 5),
+                Margin = new Thickness(0, 0, 0, 5),
+                Cursor = WpfCursors.Hand,
+                ToolTip = $"{filePath}\n• Sol tık: Aç\n• Basılı tutup sürükle: Başka uygulamaya taşı\n• ✕: Raftan kaldır"
+            };
+
+            var dp = new DockPanel();
+
+            // Kaldır Düğmesi
+            var btnRemove = new WpfButton
+            {
+                Content = "✕",
+                Width = 20,
+                Height = 20,
+                FontSize = 9,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(MediaColor.FromRgb(248, 113, 113)),
+                Background = WpfBrushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Cursor = WpfCursors.Hand,
+                ToolTip = "Raftan Kaldır"
+            };
+            btnRemove.Click += (s, e) =>
+            {
+                e.Handled = true;
+                _shelfFiles.Remove(filePath);
+                RefreshShelfUI();
+            };
+            DockPanel.SetDock(btnRemove, Dock.Right);
+            dp.Children.Add(btnRemove);
+
+            // Dosya İkonu + Bilgisi
+            var spInfo = new StackPanel { Orientation = WpfOrientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            spInfo.Children.Add(new TextBlock
+            {
+                Text = GetFileIconGlyph(filePath),
+                FontSize = 13,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 6, 0)
+            });
+
+            var spText = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            spText.Children.Add(new TextBlock
+            {
+                Text = fileName,
+                FontSize = 10.5,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = WpfBrushes.White,
+                MaxWidth = 180,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            });
+
+            long sizeBytes = 0;
+            try { if (File.Exists(filePath)) sizeBytes = new FileInfo(filePath).Length; } catch { }
+            string sizeStr = sizeBytes > 1024 * 1024 ? $"{sizeBytes / (1024.0 * 1024):0.1} MB" : (sizeBytes > 1024 ? $"{sizeBytes / 1024} KB" : $"{sizeBytes} B");
+
+            spText.Children.Add(new TextBlock
+            {
+                Text = $"{ext} • {sizeStr}",
+                FontSize = 8,
+                Foreground = new SolidColorBrush(MediaColor.FromRgb(148, 163, 184))
+            });
+
+            spInfo.Children.Add(spText);
+            dp.Children.Add(spInfo);
+            border.Child = dp;
+
+            // Tıklamayla açma
+            border.MouseLeftButtonDown += (s, e) =>
+            {
+                if (e.OriginalSource is WpfButton) return;
+                
+                // Nusa Drag & Drop Başlangıcı: Kullanıcı fareyi sürüklerse dış uygulamaya aktarır
+                var startPt = e.GetPosition(null);
+                WpfMouseEventArgs? lastMove = null;
+                void OnMouseMove(object senderMove, WpfMouseEventArgs eMove)
+                {
+                    lastMove = eMove;
+                    if (eMove.LeftButton == MouseButtonState.Pressed)
+                    {
+                        var curPt = eMove.GetPosition(null);
+                        if (Math.Abs(curPt.X - startPt.X) > 4 || Math.Abs(curPt.Y - startPt.Y) > 4)
+                        {
+                            border.MouseMove -= OnMouseMove;
+                            try
+                            {
+                                var data = new WpfDataObject(WpfDataFormats.FileDrop, new[] { filePath });
+                                DragDrop.DoDragDrop(border, data, DragDropEffects.Copy | DragDropEffects.Move);
+                            }
+                            catch { }
+                        }
+                    }
+                }
+                border.MouseMove += OnMouseMove;
+            };
+
+            border.MouseLeftButtonUp += (s, e) =>
+            {
+                if (e.OriginalSource is WpfButton) return;
+                try
+                {
+                    if (File.Exists(filePath) || Directory.Exists(filePath))
+                    {
+                        Process.Start(new ProcessStartInfo { FileName = filePath, UseShellExecute = true });
+                    }
+                }
+                catch { }
+            };
+
+            return border;
+        }
+
+        private static string GetFileIconGlyph(string path)
+        {
+            if (Directory.Exists(path)) return "📁";
+            string ext = Path.GetExtension(path).ToLowerInvariant();
+            return ext switch
+            {
+                ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".bmp" or ".ico" => "🖼️",
+                ".pdf" => "📕",
+                ".docx" or ".doc" or ".txt" or ".md" or ".rtf" => "📄",
+                ".xlsx" or ".xls" or ".csv" => "📊",
+                ".pptx" or ".ppt" => "📙",
+                ".zip" or ".rar" or ".7z" or ".tar" or ".gz" => "📦",
+                ".mp3" or ".wav" or ".flac" or ".m4a" => "🎵",
+                ".mp4" or ".mkv" or ".avi" or ".mov" => "🎬",
+                ".exe" or ".msi" or ".bat" or ".cmd" or ".ps1" => "⚙️",
+                ".cs" or ".js" or ".ts" or ".py" or ".cpp" or ".json" or ".xaml" => "💻",
+                _ => "📄"
+            };
+        }
+
+        private void WidgetFileShelf_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(WpfDataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+                WidgetFileShelf.BorderBrush = new SolidColorBrush(MediaColor.FromRgb(56, 189, 248));
+                WidgetFileShelf.Background = new SolidColorBrush(MediaColor.FromArgb(80, 56, 189, 248));
+            }
+        }
+
+        private void WidgetFileShelf_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(WpfDataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+            }
+        }
+
+        private void WidgetFileShelf_Drop(object sender, DragEventArgs e)
+        {
+            WidgetFileShelf.BorderBrush = (WpfBrush)FindResource("DockWidgetBorderBrush");
+            WidgetFileShelf.Background = (WpfBrush)FindResource("DockWidgetBackgroundBrush");
+
+            if (e.Data.GetDataPresent(WpfDataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(WpfDataFormats.FileDrop);
+                if (files != null && files.Length > 0)
+                {
+                    int added = 0;
+                    foreach (var f in files)
+                    {
+                        if ((File.Exists(f) || Directory.Exists(f)) && !_shelfFiles.Contains(f))
+                        {
+                            _shelfFiles.Add(f);
+                            added++;
+                        }
+                    }
+                    RefreshShelfUI();
+                    TriggerDynamicIsland("📁 Dosya Rafı (Nusa Shelf)", $"{added} yeni dosya rafa eklendi", "📥", "#38BDF8");
+                }
+            }
+        }
+
+        private void WidgetFileShelf_Click(object sender, MouseButtonEventArgs e)
+        {
+            PopFileShelf.PlacementTarget = WidgetFileShelf;
+            PopFileShelf.IsOpen = !PopFileShelf.IsOpen;
+        }
+
+        private void MenuOpenFileShelf_Click(object sender, RoutedEventArgs e)
+        {
+            PopFileShelf.PlacementTarget = WidgetFileShelf;
+            PopFileShelf.IsOpen = true;
+        }
+
+        private void MenuClearFileShelf_Click(object sender, RoutedEventArgs e)
+        {
+            _shelfFiles.Clear();
+            RefreshShelfUI();
+            TriggerDynamicIsland("🧹 Dosya Rafı Temizlendi", "Raftaki geçici öğeler sıfırlandı", "🧹", "#F87171");
+        }
+
+        private void MenuHideFileShelf_Click(object sender, RoutedEventArgs e)
+        {
+            var p = _settings.GetActiveProfile();
+            p.ShowFileShelf = false;
+            _settings.Save();
+            ApplySettings(_settings);
+        }
+
+        private void BtnCloseShelf_Click(object sender, RoutedEventArgs e)
+        {
+            PopFileShelf.IsOpen = false;
+        }
+
+        private void BtnOpenShelfFolder_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = _shelfStorageFolder, UseShellExecute = true });
+            }
+            catch { }
         }
 
         #endregion

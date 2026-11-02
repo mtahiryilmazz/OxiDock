@@ -26,6 +26,8 @@ namespace OxiDock
         public bool ShowQuickSearch { get; set; } = false;
         public bool ShowVolume { get; set; } = false;
         public bool ShowClipboard { get; set; } = false;
+        public bool ShowFileShelf { get; set; } = true; // Nusa Tarzı Hızlı Dosya Rafı (Dropzone)
+        public bool EnableDynamicIsland { get; set; } = true; // Dinamik Ada Bildirim ve Durum Kapsülü
 
         // Android Tarzı Widget Boyut / Varyantları: "1x1", "1x2", "1x3"
         public string ClockSize { get; set; } = "1x2";
@@ -43,6 +45,7 @@ namespace OxiDock
         public string QuickSearchSize { get; set; } = "1x2";
         public string VolumeSize { get; set; } = "1x2";
         public string ClipboardSize { get; set; } = "1x2";
+        public string FileShelfSize { get; set; } = "1x2";
 
         // Kullanıcının Oluşturduğu Özel Uygulama Widget'ları
         public List<CustomAppWidget> CustomWidgets { get; set; } = new();
@@ -61,15 +64,15 @@ namespace OxiDock
         public string WidgetSize { get; set; } = "1x2"; // "1x1", "1x2", "1x3"
         public bool IsEnabled { get; set; } = true;
 
-        // HarmonyOS 3 / HyperOS 3 / EMUI 13 Zengin Görsel Özelleştirme Alanları
-        public string CardTemplate { get; set; } = "HarmonyServiceCard"; // "HarmonyServiceCard", "HyperSuperIcon", "EmuiComboCard", "LiquidGlassCard"
+        // OxiDock Akıllı & Özelleştirilebilir Widget Mimarisi (Living Island, Super Tile, Dual Combo, Glass)
+        public string CardTemplate { get; set; } = "LivingIslandCard"; // "LivingIslandCard", "SuperTileCard", "DualComboCard", "LiquidGlassCard"
         public string BackgroundMode { get; set; } = "Glass"; // "Glass", "Gradient", "Solid", "Outline"
-        public string BadgeText { get; set; } = "SERVİS"; // Üst kapsül etiketi ("SERVİS", "HYPER", "KOMBO", "CANLI", "")
+        public string BadgeText { get; set; } = "CANLI"; // Üst kapsül etiketi ("CANLI", "PRIME", "KOMBO", "HIZLI", "")
         public bool UseNativeExeIcon { get; set; } = true; // .exe / .lnk gerçek Windows ikonunu otomatik çek
         public string CornerStyle { get; set; } = "Squircle"; // "Squircle" (14px), "Capsule" (20px), "Sharp" (6px)
-        public string SecondaryTitle { get; set; } = "Terminal"; // EMUI 13 Kombo Kart 2. eylem adı
-        public string SecondaryIcon { get; set; } = "⚡"; // EMUI 13 Kombo Kart 2. eylem ikonu
-        public string SecondaryPath { get; set; } = "wt.exe"; // EMUI 13 Kombo Kart 2. eylem hedefi
+        public string SecondaryTitle { get; set; } = "Terminal"; // Çift Eylem (Dual Combo) 2. eylem adı
+        public string SecondaryIcon { get; set; } = "⚡"; // Çift Eylem (Dual Combo) 2. eylem ikonu
+        public string SecondaryPath { get; set; } = "wt.exe"; // Çift Eylem (Dual Combo) 2. eylem hedefi
     }
 
     public class AppSettings
@@ -112,6 +115,8 @@ namespace OxiDock
         public bool ShowQuickSearch { get => GetActiveProfile().ShowQuickSearch; set => GetActiveProfile().ShowQuickSearch = value; }
         public bool ShowVolume { get => GetActiveProfile().ShowVolume; set => GetActiveProfile().ShowVolume = value; }
         public bool ShowClipboard { get => GetActiveProfile().ShowClipboard; set => GetActiveProfile().ShowClipboard = value; }
+        public bool ShowFileShelf { get => GetActiveProfile().ShowFileShelf; set => GetActiveProfile().ShowFileShelf = value; }
+        public bool EnableDynamicIsland { get => GetActiveProfile().EnableDynamicIsland; set => GetActiveProfile().EnableDynamicIsland = value; }
 
         // Kişiselleştirilmiş Özel Araç / İşlem Ayarları
         public string CustomActionTitle { get; set; } = "Terminal";

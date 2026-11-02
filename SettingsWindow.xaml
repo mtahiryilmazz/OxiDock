@@ -91,7 +91,7 @@
                                     <TextBlock Text="v2.2" FontSize="9.5" Foreground="#38BDF8" FontWeight="Bold"/>
                                 </Border>
                             </StackPanel>
-                            <TextBlock Text="Harmony • HyperOS • Fluent" FontSize="10" Foreground="#94A3B8" Margin="0,1,0,0"/>
+                            <TextBlock Text="Living Island • Super Tile • Liquid Glass" FontSize="10" Foreground="#94A3B8" Margin="0,1,0,0"/>
                         </StackPanel>
                     </StackPanel>
 
@@ -156,7 +156,7 @@
                         <!-- 1. GÖRÜNÜM VE GLASS TEMALARI (VARSAYILAN AÇILIŞ SEKMESİ) -->
                         <StackPanel x:Name="PanelAppearance" Visibility="Visible">
                             <TextBlock Text="🎨 Görünüm &amp; Cam Temaları" FontSize="19" FontWeight="Bold" Margin="0,0,0,4"/>
-                            <TextBlock Text="HarmonyOS 3, HyperOS 3 ve Liquid Glass esintili cam yüzeylerinden birine tıklayarak anında önizleyin." FontSize="11.5" Foreground="#94A3B8" Margin="0,0,0,14"/>
+                            <TextBlock Text="Liquid Glass, Frosted Crystal ve Living Island esintili cam yüzeylerinden birine tıklayarak anında önizleyin." FontSize="11.5" Foreground="#94A3B8" Margin="0,0,0,14"/>
 
                             <!-- Görsel Tema Kartları (3 Sütunlu Grid) -->
                             <UniformGrid Columns="3" Margin="0,0,0,8">
@@ -307,7 +307,7 @@
                             </UniformGrid>
                         </StackPanel>
 
-                        <!-- 1.5 ÖZEL WIDGET'LARIM (HARMONYOS 3 / HYPEROS 3 / EMUI 13 YÖNETİCİSİ) -->
+                        <!-- 1.5 ÖZEL WIDGET'LARIM (LIVING ISLAND & SUPER TILE YÖNETİCİSİ) -->
                         <StackPanel x:Name="PanelCustomWidgets" Visibility="Collapsed">
                             <DockPanel Margin="0,0,0,12">
                                 <Button DockPanel.Dock="Right" Content="✨ + Yeni Özel Widget Oluştur" Padding="14,7" Background="#38BDF8"
@@ -317,7 +317,7 @@
                                     </Button.Resources>
                                 </Button>
                                 <StackPanel>
-                                    <TextBlock Text="✨ Özel Widget'larım (HarmonyOS 3 • HyperOS 3 • EMUI 13)" FontSize="18" FontWeight="Bold"/>
+                                    <TextBlock Text="✨ Özel Widget'larım (Living Island &amp; Super Tile)" FontSize="18" FontWeight="Bold"/>
                                     <TextBlock Text="Oluşturduğunuz widget'ları buradan tek tıkla düzenleyebilir, boyutlandırabilir veya kaldırabilirsiniz." FontSize="11.5" Foreground="#94A3B8" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </DockPanel>
@@ -404,6 +404,26 @@
                                         <TextBlock Text="Tam ekran uygulama algılandığında odak bozulmaması için gizlenir." FontSize="11" Foreground="#94A3B8"/>
                                     </StackPanel>
                                     <CheckBox x:Name="ChkFullscreenHide" IsChecked="True" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource SettingCardStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Left">
+                                        <TextBlock Text="🏝️ Dinamik Ada (Dynamic Island) Bildirim Kapsülü" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="Medya, ses, kopyalama veya AI etkileşimlerinde dock üstünde akıcı ada genişlemesi." FontSize="11" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                    <CheckBox x:Name="ChkDynamicIsland" IsChecked="True" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource SettingCardStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Left">
+                                        <TextBlock Text="📁 Nusa Geçici Dosya Rafı (Dropzone Shelf)" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="Dosyaları dock'a sürükleyip geçici olarak rafta bekletin ve uygulamalara taşıyın." FontSize="11" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                    <CheckBox x:Name="ChkFileShelf" IsChecked="True" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                 </DockPanel>
                             </Border>
 
