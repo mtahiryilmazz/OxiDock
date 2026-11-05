@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OxiDock"
         mc:Ignorable="d"
-        Title="OxiDock v2.1" 
+        Title="OxiDock v2.3" 
         SizeToContent="WidthAndHeight"
         MinWidth="200" MaxWidth="1920"
         WindowStyle="None" 
@@ -31,7 +31,7 @@
         <SolidColorBrush x:Key="DockButtonForegroundBrush" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="DockButtonBorderBrush" Color="#22FFFFFF"/>
 
-        <!-- Modern Buton Stili -->
+        <!-- Modern Buton Stili (Squircle Curvature) -->
         <Style x:Key="DockButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource DockButtonBackgroundBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource DockButtonForegroundBrush}"/>
@@ -45,16 +45,17 @@
                         <Border x:Name="border" Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
                                 BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="12" SnapsToDevicePixels="True">
+                                CornerRadius="10" SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#33FFFFFF"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#44FFFFFF"/>
+                                <Setter TargetName="border" Property="Background" Value="#3338BDF8"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#8038BDF8"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#22FFFFFF"/>
+                                <Setter TargetName="border" Property="Background" Value="#5538BDF8"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#B338BDF8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -62,7 +63,7 @@
             </Setter>
         </Style>
 
-        <!-- Profil Sekme Düğmesi Stili -->
+        <!-- Profil Sekme Düğmesi Stili (HyperOS Squircle Capsule) -->
         <Style x:Key="ProfileTabStyle" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource DockButtonBackgroundBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource DockSecondaryForegroundBrush}"/>
@@ -78,13 +79,14 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12">
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12" SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="#38BDF8"/>
-                                <Setter Property="Foreground" Value="#000000"/>
+                                <Setter Property="Foreground" Value="#0F172A"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#8038BDF8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -92,19 +94,31 @@
             </Setter>
         </Style>
 
-        <!-- Widget Konteyner Stili -->
+        <!-- HyperOS 3 & HarmonyOS 3 Widget Konteyner Stili -->
         <Style x:Key="WidgetContainerStyle" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource DockWidgetBackgroundBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource DockWidgetBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderThickness" Value="1.2"/>
             <Setter Property="CornerRadius" Value="16"/>
             <Setter Property="Height" Value="68"/>
             <Setter Property="MinWidth" Value="64"/>
             <Setter Property="Margin" Value="4,0"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="UseLayoutRounding" Value="True"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270" Color="#000000" Opacity="0.32" RenderingBias="Performance"/>
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource DockButtonBackgroundBrush}"/>
-                    <Setter Property="BorderBrush" Value="{DynamicResource DockButtonBorderBrush}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource HyperGlassBorderHoverBrush}"/>
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect BlurRadius="22" ShadowDepth="4" Direction="270" Color="#38BDF8" Opacity="0.38" RenderingBias="Performance"/>
+                        </Setter.Value>
+                    </Setter>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -117,14 +131,19 @@
 
         <StackPanel VerticalAlignment="Bottom">
             <!-- Canlı Ada (Live Island) Bildirim ve Durum Kapsülü -->
-            <Border x:Name="DynamicIslandPill" HorizontalAlignment="Center" Background="#F20B0F19" CornerRadius="18"
-                    BorderBrush="#4038BDF8" BorderThickness="1.2" Padding="12,5" Margin="0,0,0,4"
-                    Visibility="Collapsed" Opacity="0" Cursor="Hand" MouseLeftButtonDown="DynamicIslandPill_Click">
+            <Border x:Name="DynamicIslandPill" HorizontalAlignment="Center" Background="#F20B0F19" CornerRadius="20"
+                    BorderBrush="{StaticResource HyperGlassBorderHoverBrush}" BorderThickness="1.2" Padding="14,6" Margin="0,0,0,5"
+                    Visibility="Collapsed" Opacity="0" Cursor="Hand" MouseLeftButtonDown="DynamicIslandPill_Click"
+                    SnapsToDevicePixels="True">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="18" ShadowDepth="3" Direction="270" Color="#000000" Opacity="0.75"/>
+                    <DropShadowEffect BlurRadius="22" ShadowDepth="4" Direction="270" Color="#000000" Opacity="0.75" RenderingBias="Performance"/>
                 </Border.Effect>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border x:Name="BdIslandDot" Width="8" Height="8" CornerRadius="4" Background="#10B981" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <Border x:Name="BdIslandDot" Width="8" Height="8" CornerRadius="4" Background="#10B981" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#10B981" Opacity="0.8"/>
+                        </Border.Effect>
+                    </Border>
                     <TextBlock x:Name="TxtIslandIcon" Text="✨" FontSize="13" VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <StackPanel VerticalAlignment="Center" Margin="0,0,8,0">
                         <TextBlock x:Name="TxtIslandTitle" Text="OxiDock Canlı Ada" FontSize="10.5" FontWeight="Bold" Foreground="#F8FAFC"/>
@@ -137,7 +156,11 @@
 
             <!-- 0. OxiDock Üst Profil Sekmeleri (Hover ile Canlı Gösterim & Sürükle-Bırak Hedefi) -->
             <Border x:Name="ProfileBarBorder" HorizontalAlignment="Center" Background="#D9121217" CornerRadius="14" 
-                    BorderBrush="#25FFFFFF" BorderThickness="1" Padding="6,3" Margin="0,0,0,3" Opacity="0.92">
+                    BorderBrush="{StaticResource HyperGlassBorderBrush}" BorderThickness="1.2" Padding="6,3" Margin="0,0,0,3" Opacity="0.95"
+                    SnapsToDevicePixels="True">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270" Color="#000000" Opacity="0.5" RenderingBias="Performance"/>
+                </Border.Effect>
                 <StackPanel x:Name="SpProfileTabs" Orientation="Horizontal" VerticalAlignment="Center" AllowDrop="True">
                     <!-- Dinamik oluşturulacak profiller veya varsayılanlar -->
                     <Button Style="{StaticResource ProfileTabStyle}" Content="1. Standart" Tag="default-1" Click="BtnProfileTab_Click"/>
@@ -148,12 +171,14 @@
             </Border>
 
             <!-- Ana Yüzen Dock Paneli (Sürükle-Bırak Hedefi & Otomatik Boyut) -->
-            <Border x:Name="MainDockBorder" HorizontalAlignment="Center" Background="#E6101016" CornerRadius="24" BorderBrush="#33FFFFFF" BorderThickness="1.2"
+            <Border x:Name="MainDockBorder" HorizontalAlignment="Center" Background="#E6101016" CornerRadius="26" 
+                    BorderBrush="{StaticResource HyperGlassBorderBrush}" BorderThickness="1.2"
                     Margin="6,0,6,8" AllowDrop="True" MouseLeftButtonDown="Window_MouseLeftButtonDown"
                     Drop="MainDockBorder_Drop" DragEnter="MainDockBorder_DragEnter" 
-                    DragLeave="MainDockBorder_DragLeave" DragOver="MainDockBorder_DragOver">
+                    DragLeave="MainDockBorder_DragLeave" DragOver="MainDockBorder_DragOver"
+                    SnapsToDevicePixels="True">
                 <Border.Effect>
-                    <DropShadowEffect x:Name="DockShadow" BlurRadius="25" ShadowDepth="8" Direction="270" Color="#000000" Opacity="0.8"/>
+                    <DropShadowEffect x:Name="DockShadow" BlurRadius="30" ShadowDepth="8" Direction="270" Color="#000000" Opacity="0.80" RenderingBias="Performance"/>
                 </Border.Effect>
 
                 <Grid Margin="6,0">
@@ -167,12 +192,12 @@
                         <ColumnDefinition Width="Auto"/> <!-- 6. Özel Araç / Terminal -->
                         <ColumnDefinition Width="Auto"/> <!-- 7. Canlı Ağ & Ping -->
                         <ColumnDefinition Width="Auto"/> <!-- 8. Müzik & Medya Çalar -->
-                        <ColumnDefinition Width="Auto"/> <!-- 9. Kripto & Finans (Yeni) -->
-                        <ColumnDefinition Width="Auto"/> <!-- 10. Takvim & Ajanda (Yeni) -->
-                        <ColumnDefinition Width="Auto"/> <!-- 11. Hızlı Spotlight Arama (Yeni) -->
-                        <ColumnDefinition Width="Auto"/> <!-- 12. Ses Denetleyicisi (Yeni) -->
-                        <ColumnDefinition Width="Auto"/> <!-- 13. Pano / Clipboard (Yeni) -->
-                        <ColumnDefinition Width="Auto"/> <!-- 14. OxiShelf Hızlı Dosya Rafı (File Shelf) -->
+                        <ColumnDefinition Width="Auto"/> <!-- 9. Kripto & Finans -->
+                        <ColumnDefinition Width="Auto"/> <!-- 10. Takvim & Ajanda -->
+                        <ColumnDefinition Width="Auto"/> <!-- 11. Hızlı Spotlight Arama -->
+                        <ColumnDefinition Width="Auto"/> <!-- 12. Ses Denetleyicisi -->
+                        <ColumnDefinition Width="Auto"/> <!-- 13. Pano / Clipboard -->
+                        <ColumnDefinition Width="Auto"/> <!-- 14. OxiShelf Hızlı Dosya Rafı -->
                         <ColumnDefinition Width="Auto"/> <!-- 15. Hızlı Not -->
                         <ColumnDefinition Width="Auto"/> <!-- 16. Ayarlar Düğmesi -->
                         <ColumnDefinition Width="Auto"/> <!-- 17. Sağ Tutamaç -->
@@ -211,7 +236,9 @@
                         <Grid Margin="6,0" VerticalAlignment="Center">
                             <!-- 1x1: Kompakt Saat -->
                             <StackPanel x:Name="PnlClock1x1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="2,0">
-                                <TextBlock Text="⏰" FontSize="13" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <Border Width="22" Height="22" CornerRadius="6" Background="#2238BDF8" BorderBrush="#4438BDF8" BorderThickness="1" Margin="0,0,6,0" VerticalAlignment="Center">
+                                    <TextBlock Text="⏰" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
                                 <TextBlock x:Name="TxtClock1x1" Text="10:45" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -227,11 +254,11 @@
                                 <!-- 1.B: Flip -->
                                 <StackPanel x:Name="PnlClockFlip" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Border Background="#1A000000" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="6" Padding="5,2" Margin="0,0,2,0">
+                                        <Border Background="#22000000" BorderBrush="{StaticResource HyperGlassBorderBrush}" BorderThickness="1" CornerRadius="7" Padding="6,2" Margin="0,0,2,0">
                                             <TextBlock x:Name="TxtFlipHours" Text="10" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}" FontFamily="Segoe UI, Consolas"/>
                                         </Border>
                                         <TextBlock Text=":" FontSize="15" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center" Margin="0,0,2,0"/>
-                                        <Border Background="#1A000000" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="6" Padding="5,2">
+                                        <Border Background="#22000000" BorderBrush="{StaticResource HyperGlassBorderBrush}" BorderThickness="1" CornerRadius="7" Padding="6,2">
                                             <TextBlock x:Name="TxtFlipMinutes" Text="42" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}" FontFamily="Segoe UI, Consolas"/>
                                         </Border>
                                     </StackPanel>
@@ -311,7 +338,9 @@
                         <Grid VerticalAlignment="Center" Margin="6,0">
                             <!-- 1x1: Kompakt Pomodoro -->
                             <StackPanel x:Name="PnlPomo1x1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="2,0">
-                                <TextBlock Text="🍅" FontSize="14" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                <Border Width="22" Height="22" CornerRadius="6" Background="#22FB7185" BorderBrush="#44FB7185" BorderThickness="1" Margin="0,0,4,0" VerticalAlignment="Center">
+                                    <TextBlock Text="🍅" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
                                 <TextBlock x:Name="TxtPomo1x1Timer" Text="25m" FontSize="13" FontWeight="Bold" Foreground="#F87171" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -321,7 +350,7 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border x:Name="BdPomoEmoji" Grid.Column="0" Width="34" Height="34" CornerRadius="17" Background="#26EF4444" Margin="0,0,6,0" VerticalAlignment="Center">
+                                <Border x:Name="BdPomoEmoji" Grid.Column="0" Width="34" Height="34" CornerRadius="10" Background="#22EF4444" BorderBrush="#44EF4444" BorderThickness="1" Margin="0,0,8,0" VerticalAlignment="Center">
                                     <TextBlock x:Name="TxtPomoEmoji" Text="🍅" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -330,14 +359,14 @@
                                         <TextBlock x:Name="TxtPomoRounds" Text="● ○ ○ ○" FontSize="8" Foreground="#38BDF8" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="4,0,0,0"/>
                                     </DockPanel>
                                     <TextBlock x:Name="TxtPomoTimer" Text="25:00" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}" Margin="0,1,0,2"/>
-                                    <ProgressBar x:Name="PbPomoProgress" Value="100" Maximum="100" Height="3" Width="76" HorizontalAlignment="Left"
+                                    <ProgressBar x:Name="PbPomoProgress" Value="100" Maximum="100" Height="3.5" Width="76" HorizontalAlignment="Left"
                                                  Foreground="#EF4444" Background="#25FFFFFF" BorderThickness="0"/>
                                 </StackPanel>
                             </Grid>
 
                             <!-- 1x3: Genişletilmiş Pomodoro Paneli -->
                             <StackPanel x:Name="PnlPomo1x3" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="4,0">
-                                <Border Width="38" Height="38" CornerRadius="19" Background="#26EF4444" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <Border Width="38" Height="38" CornerRadius="11" Background="#22EF4444" BorderBrush="#44EF4444" BorderThickness="1" Margin="0,0,8,0" VerticalAlignment="Center">
                                     <TextBlock Text="🍅" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,8,0">
@@ -374,7 +403,9 @@
                         <Grid VerticalAlignment="Center" Margin="8,0">
                             <!-- 1x1: Kompakt Hava Durumu -->
                             <StackPanel x:Name="PnlWeather1x1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="2,0">
-                                <TextBlock x:Name="TxtWeather1x1Icon" Text="☀️" FontSize="15" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <Border Width="22" Height="22" CornerRadius="6" Background="#22FBBF24" BorderBrush="#44FBBF24" BorderThickness="1" Margin="0,0,4,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TxtWeather1x1Icon" Text="☀️" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
                                 <TextBlock x:Name="TxtWeather1x1Temp" Text="22°" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -407,31 +438,41 @@
                                 <Border Width="1" Height="30" Background="{DynamicResource DockMutedForegroundBrush}" Margin="0,0,8,0" Opacity="0.3"/>
                                 <!-- 5 Günlük Tahmin Izgarası -->
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <StackPanel HorizontalAlignment="Center" Margin="3,0">
-                                        <TextBlock Text="Pzt" FontSize="8" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="☀️" FontSize="10" Margin="0,1" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="22°" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockForegroundBrush}" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center" Margin="3,0">
-                                        <TextBlock Text="Sal" FontSize="8" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="⛅" FontSize="10" Margin="0,1" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="20°" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockForegroundBrush}" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center" Margin="3,0">
-                                        <TextBlock Text="Çar" FontSize="8" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="🌧️" FontSize="10" Margin="0,1" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="17°" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockForegroundBrush}" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center" Margin="3,0">
-                                        <TextBlock Text="Per" FontSize="8" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="🌤️" FontSize="10" Margin="0,1" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="21°" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockForegroundBrush}" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Center" Margin="3,0">
-                                        <TextBlock Text="Cum" FontSize="8" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="☀️" FontSize="10" Margin="0,1" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="23°" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockForegroundBrush}" HorizontalAlignment="Center"/>
-                                    </StackPanel>
+                                    <Border Background="#15FFFFFF" CornerRadius="6" Padding="4,2" Margin="2,0">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="Pzt" FontSize="8" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="☀️" FontSize="10" Margin="0,1" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="22°" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockForegroundBrush}" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Background="#15FFFFFF" CornerRadius="6" Padding="4,2" Margin="2,0">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="Sal" FontSize="8" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="⛅" FontSize="10" Margin="0,1" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="20°" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockForegroundBrush}" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Background="#15FFFFFF" CornerRadius="6" Padding="4,2" Margin="2,0">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="Çar" FontSize="8" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="🌧️" FontSize="10" Margin="0,1" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="17°" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockForegroundBrush}" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Background="#15FFFFFF" CornerRadius="6" Padding="4,2" Margin="2,0">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="Per" FontSize="8" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="🌤️" FontSize="10" Margin="0,1" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="21°" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockForegroundBrush}" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Background="#15FFFFFF" CornerRadius="6" Padding="4,2" Margin="2,0">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="Cum" FontSize="8" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="☀️" FontSize="10" Margin="0,1" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="23°" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockForegroundBrush}" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
@@ -452,7 +493,9 @@
                         <Grid VerticalAlignment="Center" Margin="6,0">
                             <!-- 1x1: Kompakt CPU -->
                             <StackPanel x:Name="PnlSystem1x1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="2,0">
-                                <TextBlock Text="⚡" FontSize="12" Foreground="#60A5FA" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                <Border Width="22" Height="22" CornerRadius="6" Background="#2238BDF8" BorderBrush="#4438BDF8" BorderThickness="1" Margin="0,0,4,0" VerticalAlignment="Center">
+                                    <TextBlock Text="⚡" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
                                 <TextBlock x:Name="TxtCpu1x1" Text="14%" FontSize="13" FontWeight="Bold" Foreground="#60A5FA" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -460,13 +503,13 @@
                             <StackPanel x:Name="PnlSystem1x2" Orientation="Horizontal" VerticalAlignment="Center">
                                 <StackPanel HorizontalAlignment="Center" Margin="4,0">
                                     <TextBlock Text="CPU" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtCpuVal" Text="14%" FontSize="13" FontWeight="Bold" Foreground="#60A5FA" HorizontalAlignment="Center"/>
-                                    <ProgressBar x:Name="PbCpu" Value="14" Maximum="100" Height="3" Width="38" Margin="0,2,0,0" Foreground="#3B82F6" Background="#22FFFFFF" BorderThickness="0"/>
+                                    <TextBlock x:Name="TxtCpuVal" Text="14%" FontSize="13" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Center"/>
+                                    <ProgressBar x:Name="PbCpu" Value="14" Maximum="100" Height="3" Width="38" Margin="0,2,0,0" Foreground="#38BDF8" Background="#22FFFFFF" BorderThickness="0"/>
                                 </StackPanel>
                                 <StackPanel HorizontalAlignment="Center" Margin="4,0">
                                     <TextBlock Text="RAM" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
                                     <TextBlock x:Name="TxtRamVal" Text="46%" FontSize="13" FontWeight="Bold" Foreground="#C084FC" HorizontalAlignment="Center"/>
-                                    <ProgressBar x:Name="PbRam" Value="46" Maximum="100" Height="3" Width="38" Margin="0,2,0,0" Foreground="#A855F7" Background="#22FFFFFF" BorderThickness="0"/>
+                                    <ProgressBar x:Name="PbRam" Value="46" Maximum="100" Height="3" Width="38" Margin="0,2,0,0" Foreground="#C084FC" Background="#22FFFFFF" BorderThickness="0"/>
                                 </StackPanel>
                                 <StackPanel x:Name="SpBattery" HorizontalAlignment="Center" Margin="4,0">
                                     <TextBlock Text="PİL" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource DockMutedForegroundBrush}" HorizontalAlignment="Center"/>
@@ -477,8 +520,8 @@
                             <!-- 1x3: Genişletilmiş Tam Donanım Dashboard -->
                             <StackPanel x:Name="PnlSystem1x3" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="4,0">
                                 <StackPanel Margin="4,0">
-                                    <TextBlock Text="CPU" FontSize="9" FontWeight="Bold" Foreground="#60A5FA"/>
-                                    <TextBlock x:Name="TxtCpu1x3" Text="14%" FontSize="14" FontWeight="Bold" Foreground="#60A5FA"/>
+                                    <TextBlock Text="CPU" FontSize="9" FontWeight="Bold" Foreground="#38BDF8"/>
+                                    <TextBlock x:Name="TxtCpu1x3" Text="14%" FontSize="14" FontWeight="Bold" Foreground="#38BDF8"/>
                                 </StackPanel>
                                 <StackPanel Margin="4,0">
                                     <TextBlock Text="RAM" FontSize="9" FontWeight="Bold" Foreground="#C084FC"/>
@@ -550,11 +593,11 @@
                                     <MenuItem Header="✕ Widget'ı Gizle" Click="MenuHideCustomAction_Click"/>
                                 </ContextMenu>
                             </Border.ContextMenu>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0">
-                                <Border Width="26" Height="26" CornerRadius="7" Background="#2638BDF8" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0">
+                                <Border Width="28" Height="28" CornerRadius="8" Background="#2238BDF8" BorderBrush="#4438BDF8" BorderThickness="1" VerticalAlignment="Center">
                                     <TextBlock x:Name="TxtCustomActionIcon" Text="⚡" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <StackPanel VerticalAlignment="Center" Margin="5,0,0,0">
+                                <StackPanel VerticalAlignment="Center" Margin="6,0,0,0">
                                     <TextBlock x:Name="TxtCustomActionTitle" Text="Terminal" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}" TextTrimming="CharacterEllipsis" MaxWidth="50"/>
                                     <TextBlock Text="AÇ" FontSize="8" FontWeight="SemiBold" Foreground="#38BDF8"/>
                                 </StackPanel>
@@ -572,8 +615,10 @@
                             </ContextMenu>
                         </Border.ContextMenu>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0">
-                            <TextBlock Text="🌐" FontSize="12" VerticalAlignment="Center"/>
-                            <StackPanel VerticalAlignment="Center" Margin="5,0,0,0">
+                            <Border Width="28" Height="28" CornerRadius="8" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1" VerticalAlignment="Center" Margin="0,0,6,0">
+                                <TextBlock Text="🌐" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
                                 <TextBlock x:Name="TxtPingVal" Text="18 ms" FontSize="11" FontWeight="Bold" Foreground="#34D399"/>
                                 <TextBlock x:Name="TxtPingLabel" Text="ÇEVRİMİÇİ" FontSize="8" Foreground="{DynamicResource DockMutedForegroundBrush}"/>
                             </StackPanel>
@@ -607,24 +652,24 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Width="34" Height="34" CornerRadius="8" Background="#2AFFFFFF">
+                                <Border Grid.Column="0" Width="34" Height="34" CornerRadius="10" Background="#22C084FC" BorderBrush="#44C084FC" BorderThickness="1">
                                     <TextBlock Text="🎵" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0" MaxWidth="110">
                                     <TextBlock x:Name="TxtSongTitle" Text="Medya Bekleniyor" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}" TextTrimming="CharacterEllipsis"/>
                                     <TextBlock x:Name="TxtSongArtist" Text="Spotify veya Tarayıcı" FontSize="9" Foreground="{DynamicResource DockSecondaryForegroundBrush}" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                     <StackPanel x:Name="SpEqualizer" Orientation="Horizontal" Margin="0,2,0,0">
-                                        <Rectangle x:Name="Bar1" Width="3" Height="4" Fill="#22C55E" RadiusX="1.5" RadiusY="1.5" Margin="0,0,2,0"/>
-                                        <Rectangle x:Name="Bar2" Width="3" Height="4" Fill="#22C55E" RadiusX="1.5" RadiusY="1.5" Margin="0,0,2,0"/>
-                                        <Rectangle x:Name="Bar3" Width="3" Height="4" Fill="#22C55E" RadiusX="1.5" RadiusY="1.5" Margin="0,0,2,0"/>
-                                        <Rectangle x:Name="Bar4" Width="3" Height="4" Fill="#22C55E" RadiusX="1.5" RadiusY="1.5"/>
+                                        <Rectangle x:Name="Bar1" Width="3" Height="4" Fill="#34D399" RadiusX="1.5" RadiusY="1.5" Margin="0,0,2,0"/>
+                                        <Rectangle x:Name="Bar2" Width="3" Height="4" Fill="#34D399" RadiusX="1.5" RadiusY="1.5" Margin="0,0,2,0"/>
+                                        <Rectangle x:Name="Bar3" Width="3" Height="4" Fill="#34D399" RadiusX="1.5" RadiusY="1.5" Margin="0,0,2,0"/>
+                                        <Rectangle x:Name="Bar4" Width="3" Height="4" Fill="#34D399" RadiusX="1.5" RadiusY="1.5"/>
                                     </StackPanel>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button Style="{StaticResource DockButtonStyle}" Width="24" Height="24" Click="BtnPrev_Click" ToolTip="Önceki">
                                         <TextBlock Text="⏮" FontSize="8"/>
                                     </Button>
-                                    <Button x:Name="BtnPlayPause" Style="{StaticResource DockButtonStyle}" Width="28" Height="28" Margin="2,0" Click="BtnPlayPause_Click" Background="#33FFFFFF">
+                                    <Button x:Name="BtnPlayPause" Style="{StaticResource DockButtonStyle}" Width="28" Height="28" Margin="2,0" Click="BtnPlayPause_Click" Background="#3338BDF8">
                                         <TextBlock x:Name="TxtPlayPauseIcon" Text="▶" FontSize="10"/>
                                     </Button>
                                     <Button Style="{StaticResource DockButtonStyle}" Width="24" Height="24" Click="BtnNext_Click" ToolTip="Sonraki">
@@ -635,24 +680,24 @@
 
                             <!-- 1x3: Genişletilmiş Müzik Çalar -->
                             <StackPanel x:Name="PnlMusic1x3" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="4,0">
-                                <Border Width="38" Height="38" CornerRadius="8" Background="#2AFFFFFF" Margin="0,0,8,0">
+                                <Border Width="38" Height="38" CornerRadius="11" Background="#22C084FC" BorderBrush="#44C084FC" BorderThickness="1" Margin="0,0,8,0">
                                     <TextBlock Text="🎵" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,10,0" MaxWidth="140">
                                     <TextBlock x:Name="TxtSongTitle1x3" Text="Medya Bekleniyor" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}" TextTrimming="CharacterEllipsis"/>
                                     <TextBlock x:Name="TxtSongArtist1x3" Text="Spotify veya Tarayıcı açın" FontSize="10" Foreground="{DynamicResource DockSecondaryForegroundBrush}" TextTrimming="CharacterEllipsis"/>
-                                    <ProgressBar Value="45" Maximum="100" Height="3" Margin="0,3,0,0" Foreground="#22C55E" Background="#22FFFFFF" BorderThickness="0"/>
+                                    <ProgressBar Value="45" Maximum="100" Height="3.5" Margin="0,3,0,0" Foreground="#34D399" Background="#22FFFFFF" BorderThickness="0"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button Style="{StaticResource DockButtonStyle}" Width="26" Height="26" Click="BtnPrev_Click"><TextBlock Text="⏮" FontSize="9"/></Button>
-                                    <Button Style="{StaticResource DockButtonStyle}" Width="30" Height="30" Margin="3,0" Click="BtnPlayPause_Click" Background="#33FFFFFF"><TextBlock x:Name="TxtPlayPauseIcon1x3" Text="▶" FontSize="11"/></Button>
+                                    <Button Style="{StaticResource DockButtonStyle}" Width="30" Height="30" Margin="3,0" Click="BtnPlayPause_Click" Background="#3338BDF8"><TextBlock x:Name="TxtPlayPauseIcon1x3" Text="▶" FontSize="11"/></Button>
                                     <Button Style="{StaticResource DockButtonStyle}" Width="26" Height="26" Click="BtnNext_Click"><TextBlock Text="⏭" FontSize="9"/></Button>
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
                     </Border>
 
-                    <!-- 9. Kripto & Piyasa Widget'ı (Yeni Web Widget!) -->
+                    <!-- 9. Kripto & Piyasa Widget'ı -->
                     <Border x:Name="WidgetCrypto" Grid.Column="9" Style="{StaticResource WidgetContainerStyle}" ToolTip="Canlı Kripto &amp; Piyasa Kurları" Visibility="Collapsed">
                         <Border.ContextMenu>
                             <ContextMenu>
@@ -668,19 +713,21 @@
                         <Grid VerticalAlignment="Center" Margin="6,0">
                             <!-- 1x1: Kompakt Bitcoin -->
                             <StackPanel x:Name="PnlCrypto1x1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="2,0">
-                                <TextBlock Text="₿" FontSize="14" FontWeight="Bold" Foreground="#F59E0B" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                <Border Width="22" Height="22" CornerRadius="6" Background="#22FBBF24" BorderBrush="#44FBBF24" BorderThickness="1" Margin="0,0,4,0" VerticalAlignment="Center">
+                                    <TextBlock Text="₿" FontSize="12" FontWeight="Bold" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
                                 <TextBlock x:Name="TxtCrypto1x1" Text="$68.4K" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <!-- 1x2: Standart BTC & ETH -->
                             <StackPanel x:Name="PnlCrypto1x2" Orientation="Horizontal" VerticalAlignment="Center">
                                 <StackPanel Margin="3,0">
-                                    <TextBlock Text="BTC" FontSize="9" FontWeight="Bold" Foreground="#F59E0B"/>
+                                    <TextBlock Text="BTC" FontSize="9" FontWeight="Bold" Foreground="#FBBF24"/>
                                     <TextBlock x:Name="TxtBtcPrice" Text="$68,450" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}"/>
                                 </StackPanel>
                                 <Border Width="1" Height="20" Background="{DynamicResource DockMutedForegroundBrush}" Margin="4,0" Opacity="0.3"/>
                                 <StackPanel Margin="3,0">
-                                    <TextBlock Text="ETH" FontSize="9" FontWeight="Bold" Foreground="#60A5FA"/>
+                                    <TextBlock Text="ETH" FontSize="9" FontWeight="Bold" Foreground="#38BDF8"/>
                                     <TextBlock x:Name="TxtEthPrice" Text="$2,640" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}"/>
                                 </StackPanel>
                             </StackPanel>
@@ -688,11 +735,11 @@
                             <!-- 1x3: Genişletilmiş Kripto & Döviz Tablosu -->
                             <StackPanel x:Name="PnlCrypto1x3" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="4,0">
                                 <StackPanel Margin="3,0">
-                                    <TextBlock Text="BTC" FontSize="8" FontWeight="Bold" Foreground="#F59E0B"/>
+                                    <TextBlock Text="BTC" FontSize="8" FontWeight="Bold" Foreground="#FBBF24"/>
                                     <TextBlock x:Name="TxtBtc1x3" Text="$68,450" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}"/>
                                 </StackPanel>
                                 <StackPanel Margin="3,0">
-                                    <TextBlock Text="ETH" FontSize="8" FontWeight="Bold" Foreground="#60A5FA"/>
+                                    <TextBlock Text="ETH" FontSize="8" FontWeight="Bold" Foreground="#38BDF8"/>
                                     <TextBlock x:Name="TxtEth1x3" Text="$2,640" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}"/>
                                 </StackPanel>
                                 <StackPanel Margin="3,0">
@@ -708,7 +755,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- 10. Takvim & Ajanda Widget'ı (Yeni!) -->
+                    <!-- 10. Takvim & Ajanda Widget'ı -->
                     <Border x:Name="WidgetCalendar" Grid.Column="10" Style="{StaticResource WidgetContainerStyle}" ToolTip="Ajanda &amp; Takvim" Visibility="Collapsed">
                         <Border.ContextMenu>
                             <ContextMenu>
@@ -724,7 +771,9 @@
                         <Grid VerticalAlignment="Center" Margin="6,0">
                             <!-- 1x1: Kompakt Gün -->
                             <StackPanel x:Name="PnlCalendar1x1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="2,0">
-                                <TextBlock Text="📅" FontSize="13" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                <Border Width="22" Height="22" CornerRadius="6" Background="#2238BDF8" BorderBrush="#4438BDF8" BorderThickness="1" Margin="0,0,4,0" VerticalAlignment="Center">
+                                    <TextBlock Text="📅" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
                                 <TextBlock x:Name="TxtCal1x1" Text="26 Eki" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -748,7 +797,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- 11. Hızlı Spotlight Arama Widget'ı (Yeni Web Widget!) -->
+                    <!-- 11. Hızlı Spotlight Arama Widget'ı -->
                     <Border x:Name="WidgetQuickSearch" Grid.Column="11" Style="{StaticResource WidgetContainerStyle}" ToolTip="Hızlı Web / AI Arama" Visibility="Collapsed">
                         <Border.ContextMenu>
                             <ContextMenu>
@@ -768,9 +817,9 @@
 
                             <!-- 1x2: İnput Kutusu (Enter ile Doğrudan Ara) -->
                             <StackPanel x:Name="PnlSearch1x2" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Border Background="#1C1C28" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="12" Padding="6,2" VerticalAlignment="Center">
+                                <Border Background="#1C2130" BorderBrush="{StaticResource HyperGlassBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="8,3" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="🔍" FontSize="10" Foreground="#88FFFFFF" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <TextBlock Text="🔍" FontSize="10" Foreground="#88FFFFFF" VerticalAlignment="Center" Margin="0,0,5,0"/>
                                         <TextBox x:Name="TxtSearchBox" Width="90" Background="Transparent" BorderThickness="0" Foreground="#FFFFFF" 
                                                  FontSize="10" VerticalAlignment="Center" KeyDown="TxtSearchBox_KeyDown" ToolTip="Yazın ve Enter'a basın"/>
                                     </StackPanel>
@@ -779,7 +828,7 @@
 
                             <!-- 1x3: Çoklu Arama Paneli -->
                             <StackPanel x:Name="PnlSearch1x3" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Border Background="#1C1C28" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="12" Padding="6,2" VerticalAlignment="Center">
+                                <Border Background="#1C2130" BorderBrush="{StaticResource HyperGlassBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="8,3" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="🔍" FontSize="11" Foreground="#88FFFFFF" VerticalAlignment="Center" Margin="0,0,5,0"/>
                                         <TextBox x:Name="TxtSearchBox1x3" Width="120" Background="Transparent" BorderThickness="0" Foreground="#FFFFFF" 
@@ -793,7 +842,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- 12. Ses Seviyesi & Çıkış Denetleyicisi (Yeni!) -->
+                    <!-- 12. Ses Seviyesi & Çıkış Denetleyicisi -->
                     <Border x:Name="WidgetVolume" Grid.Column="12" Style="{StaticResource WidgetContainerStyle}" ToolTip="Windows Ses Düzeyi" Visibility="Collapsed">
                         <Border.ContextMenu>
                             <ContextMenu>
@@ -807,7 +856,9 @@
                         <Grid VerticalAlignment="Center" Margin="4,0">
                             <!-- 1x1: Mini Ses -->
                             <StackPanel x:Name="PnlVolume1x1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="2,0">
-                                <TextBlock Text="🔊" FontSize="13" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                <Border Width="22" Height="22" CornerRadius="6" Background="#2238BDF8" BorderBrush="#4438BDF8" BorderThickness="1" Margin="0,0,4,0" VerticalAlignment="Center">
+                                    <TextBlock Text="🔊" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
                                 <TextBlock x:Name="TxtVolume1x1" Text="70%" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -822,7 +873,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- 13. Pano Geçmişi Widget'ı (Yeni!) -->
+                    <!-- 13. Pano Geçmişi Widget'ı -->
                     <Border x:Name="WidgetClipboard" Grid.Column="13" Style="{StaticResource WidgetContainerStyle}" ToolTip="Pano Geçmişi" Visibility="Collapsed">
                         <Border.ContextMenu>
                             <ContextMenu>
@@ -835,7 +886,9 @@
                         </Border.ContextMenu>
 
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0">
-                            <TextBlock Text="📋" FontSize="13" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <Border Width="26" Height="26" CornerRadius="7" Background="#2238BDF8" BorderBrush="#4438BDF8" BorderThickness="1" Margin="0,0,5,0" VerticalAlignment="Center">
+                                <TextBlock Text="📋" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
                             <TextBlock x:Name="TxtClipboardPreview" Text="Pano Boş" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource DockForegroundBrush}" MaxWidth="70" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                     </Border>
@@ -857,7 +910,9 @@
                         </Border.ContextMenu>
 
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0">
-                            <TextBlock Text="📁" FontSize="13" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <Border Width="26" Height="26" CornerRadius="7" Background="#2034D399" BorderBrush="#4034D399" BorderThickness="1" Margin="0,0,5,0" VerticalAlignment="Center">
+                                <TextBlock Text="📁" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock x:Name="TxtShelfCount" Text="Raf (0)" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource DockForegroundBrush}"/>
                                 <TextBlock x:Name="TxtShelfSub" Text="Bırak" FontSize="7.5" Foreground="#38BDF8"/>
@@ -899,12 +954,12 @@
             </Border>
         </StackPanel>
 
-        <!-- Hızlı Not Açılır Pop-up Penceresi -->
+        <!-- Hızlı Not Açılır Pop-up Penceresi (HyperOS Squircle Frame) -->
         <Popup x:Name="PopNote" StaysOpen="False" Placement="Top" AllowsTransparency="True" PopupAnimation="Slide">
-            <Border Background="#E6161620" CornerRadius="16" BorderBrush="#33FFFFFF" BorderThickness="1.2"
-                    Width="280" Height="180" Margin="0,0,0,10">
+            <Border Background="#F4161B28" CornerRadius="18" BorderBrush="{StaticResource HyperGlassBorderBrush}" BorderThickness="1.2"
+                    Width="280" Height="180" Margin="0,0,0,10" SnapsToDevicePixels="True">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="20" ShadowDepth="6" Direction="270" Color="#000000" Opacity="0.7"/>
+                    <DropShadowEffect BlurRadius="24" ShadowDepth="6" Direction="270" Color="#000000" Opacity="0.75" RenderingBias="Performance"/>
                 </Border.Effect>
                 <Grid Margin="12">
                     <Grid.RowDefinitions>
@@ -916,8 +971,8 @@
                         <Button Content="✕" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" 
                                 Foreground="#88FFFFFF" Cursor="Hand" Click="BtnCloseNote_Click"/>
                     </Grid>
-                    <TextBox x:Name="TxtQuickNote" Grid.Row="1" Background="#20000000" Foreground="#FFFFFF"
-                             BorderBrush="#1AFFFFFF" BorderThickness="1" TextWrapping="Wrap" AcceptsReturn="True"
+                    <TextBox x:Name="TxtQuickNote" Grid.Row="1" Background="#22000000" Foreground="#FFFFFF"
+                             BorderBrush="#25FFFFFF" BorderThickness="1" TextWrapping="Wrap" AcceptsReturn="True"
                              FontSize="12" Padding="6" TextChanged="TxtQuickNote_TextChanged"/>
                 </Grid>
             </Border>
@@ -925,10 +980,10 @@
 
         <!-- OxiShelf Hızlı Dosya Rafı (File Shelf) Açılır Paneli -->
         <Popup x:Name="PopFileShelf" StaysOpen="False" Placement="Top" AllowsTransparency="True" PopupAnimation="Fade">
-            <Border Background="#F00F172A" CornerRadius="16" BorderBrush="#4038BDF8" BorderThickness="1.2"
-                    Width="320" MaxHeight="300" Margin="0,0,0,10" Padding="12">
+            <Border Background="#F40F172A" CornerRadius="18" BorderBrush="{StaticResource HyperGlassBorderHoverBrush}" BorderThickness="1.2"
+                    Width="320" MaxHeight="300" Margin="0,0,0,10" Padding="12" SnapsToDevicePixels="True">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="24" ShadowDepth="6" Direction="270" Color="#000000" Opacity="0.85"/>
+                    <DropShadowEffect BlurRadius="28" ShadowDepth="6" Direction="270" Color="#000000" Opacity="0.85" RenderingBias="Performance"/>
                 </Border.Effect>
                 <Grid>
                     <Grid.RowDefinitions>
